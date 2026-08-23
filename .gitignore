@@ -4,3 +4,6 @@ config.h
 .comfile
 *.out
 *~
+
+bin/
+!bin/.gitkeep

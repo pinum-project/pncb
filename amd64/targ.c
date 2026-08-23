@@ -1,3 +1,13 @@
+/*
+ * Original QBE Codebase
+ * Copyright (c) 2015-2026 Quentin Carbonneaux <quentin@c9x.me>
+ *
+ * Modifications for PiNum Compiler Backend (pncb)
+ * Copyright (c) 2026-present PiNum Project Authors
+ *
+ * Released under the MIT License.
+ */
+
 #include "all.h"
 
 Amd64Op amd64_op[NOp] = {

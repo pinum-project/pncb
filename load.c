@@ -1,3 +1,13 @@
+/*
+ * Original QBE Codebase
+ * Copyright (c) 2015-2026 Quentin Carbonneaux <quentin@c9x.me>
+ *
+ * Modifications for PiNum Compiler Backend (pncb)
+ * Copyright (c) 2026-present PiNum Project Authors
+ *
+ * Released under the MIT License.
+ */
+
 #include "all.h"
 
 #define MASK(w) (BIT(8 * (w) - 1) * 2 - 1) /* must work when w==8 */
