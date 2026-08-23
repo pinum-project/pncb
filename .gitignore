@@ -5,5 +5,5 @@ config.h
 *.out
 *~
 
-bin/
+bin/*
 !bin/.gitkeep
