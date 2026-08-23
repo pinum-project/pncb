@@ -91,19 +91,19 @@ clean-gen: clean
 	rm -f config.h
 
 check: qbe
-	tools/test.sh all
+	bin=bin/qbe tools/test.sh all
 
 check-x86_64: qbe
-	TARGET=x86_64 tools/test.sh all
+	TARGET=x86_64 bin=bin/qbe tools/test.sh all
 
 check-arm64: qbe
-	TARGET=arm64 tools/test.sh all
+	TARGET=arm64 bin=bin/qbe tools/test.sh all
 
 check-rv64: qbe
-	TARGET=rv64 tools/test.sh all
+	TARGET=rv64 bin=bin/qbe tools/test.sh all
 
 check-amd64_win: qbe
-	TARGET=amd64_win tools/test.sh all
+	TARGET=amd64_win bin=bin/qbe tools/test.sh all
 
 src:
 	@echo $(SRCALL)
