@@ -1,5 +1,5 @@
 *.o
-qbe
+pncb
 config.h
 .comfile
 *.out

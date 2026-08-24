@@ -82,14 +82,20 @@ enum {
         Tmp0 = NBit, /* first non-reg temporary */
 };
 
+/* bit-set */
 struct BSet {
-        uint nt;
-        bits *t;
+        uint nt; // Number of bits words allocated
+        bits *t; // the array of bits word
 };
 
+/*
+ * Reference to a value
+ * By explicitly allocating, overrrides 32 bit allocation,
+ * to assign the specific allocated size.
+ */
 struct Ref {
-        uint type : 3;
-        uint val : 29;
+        uint type : 3; // 3 bit allocated
+        uint val : 29; // 29 bit allocated
 };
 
 enum {
@@ -103,22 +109,29 @@ enum {
 };
 
 // clang-format off
-#define R        (Ref){RTmp, 0}
-#define UNDEF    (Ref){RCon, 0}  /* represents uninitialized data */
-#define CON_Z    (Ref){RCon, 1}
-#define TMP(x)   (Ref){RTmp, x}
-#define CON(x)   (Ref){RCon, x}
-#define SLOT(x)  (Ref){RSlot, (x)&0x1fffffff}
-#define TYPE(x)  (Ref){RType, x}
-#define CALL(x)  (Ref){RCall, x}
-#define MEM(x)   (Ref){RMem, x}
-#define INT(x)   (Ref){RInt, (x)&0x1fffffff}
+#define R        (Ref){RTmp, 0}               // NULL Ref
+#define UNDEF    (Ref){RCon, 0}               // represents uninitialized data
+#define CON_Z    (Ref){RCon, 1}               // constant zero
+#define TMP(x)   (Ref){RTmp, x}               // reference to temporary
+#define CON(x)   (Ref){RCon, x}               // constant x
+#define SLOT(x)  (Ref){RSlot, (x)&0x1fffffff} // stack slot reference
+#define TYPE(x)  (Ref){RType, x}              // a type operand (used by alloc/aggregate ops)
+#define CALL(x)  (Ref){RCall, x}              // result of a call site x
+#define MEM(x)   (Ref){RMem, x}               // the memory state token (tracks aliasing across loads/stores)
+#define INT(x)   (Ref){RInt, (x)&0x1fffffff}  // a small intager immediate
 // clang-format on
 
+/*
+ * req - reference equal.
+ * Check if the references are equal.
+ */
 static inline int req(Ref a, Ref b) {
         return a.type == b.type && a.val == b.val;
 }
-
+/*
+ * return Ref type tag
+ * -1 if the value is null
+ */
 static inline int rtype(Ref r) {
         if (req(r, R)) {
                 return -1;
@@ -126,10 +139,24 @@ static inline int rtype(Ref r) {
         return r.type;
 }
 
+/*
+ * Ref Signed Value
+ * Does sign extention for Ref.val
+ * makes 29 bit number standard 32 bit
+ */
 static inline int rsval(Ref r) {
         return ((int)r.val ^ 0x10000000) - 0x10000000;
 }
 
+/*
+ * Intager and Float COmparison kinds
+ * C - compare
+ * i, f - intager, float
+ * s, u - signed, unisgned
+ * eq, ne - equal, not equal
+ * ge, gt, le, lt - greater or equal, greater than, less or equal, less than
+ * o, uo - ordered, unordered
+ */
 enum CmpI {
         Cieq,
         Cine,
@@ -141,9 +168,8 @@ enum CmpI {
         Ciugt,
         Ciule,
         Ciult,
-        NCmpI,
+        NCmpI, // Number of comparison, Intager
 };
-
 enum CmpF {
         Cfeq,
         Cfge,
@@ -153,8 +179,8 @@ enum CmpF {
         Cfne,
         Cfo,
         Cfuo,
-        NCmpF,
-        NCmp = NCmpI + NCmpF,
+        NCmpF,                // Number of comparison, float
+        NCmp = NCmpI + NCmpF, // total number of comparison
 };
 
 enum O {
@@ -184,23 +210,23 @@ enum J {
 // clang-format on
 
 enum {
-        Ocmpw   = Oceqw,
-        Ocmpw1  = Ocultw,
-        Ocmpl   = Oceql,
-        Ocmpl1  = Ocultl,
-        Ocmps   = Oceqs,
-        Ocmps1  = Ocuos,
-        Ocmpd   = Oceqd,
-        Ocmpd1  = Ocuod,
-        Oalloc  = Oalloc4,
-        Oalloc1 = Oalloc16,
-        Oflag   = Oflagieq,
-        Oflag1  = Oflagfuo,
-        Oxsel   = Oxselieq,
-        Oxsel1  = Oxselfuo,
-        NPubOp  = Onop,
-        Jjf     = Jjfieq,
-        Jjf1    = Jjffuo,
+        Ocmpw   = Oceqw,    // compare word: signed ==
+        Ocmpw1  = Ocultw,   // compare word: unsigned <
+        Ocmpl   = Oceql,    // compare long: signed ==
+        Ocmpl1  = Ocultl,   // compare long: unsigned <
+        Ocmps   = Oceqs,    // compare single (float): ==
+        Ocmps1  = Ocuos,    // compare single: unordered (NaN)
+        Ocmpd   = Oceqd,    // compare double: ==
+        Ocmpd1  = Ocuod,    // compare double: unordered (NaN)
+        Oalloc  = Oalloc4,  // stack alloc: 4 bytes
+        Oalloc1 = Oalloc16, // stack alloc: 16 bytes
+        Oflag   = Oflagieq, // read CPU flag: int equal
+        Oflag1  = Oflagfuo, // read CPU flag: float unordered
+        Oxsel   = Oxselieq, // select: int equal
+        Oxsel1  = Oxselfuo, // select: float unordered
+        NPubOp  = Onop,     // sentinel: ops below are user-visible IL
+        Jjf     = Jjfieq,   // jump if false: int equal
+        Jjf1    = Jjffuo,   // jump if false: float unordered
 };
 
 #define INRANGE(x, l, u) ((unsigned)(x) - l <= u - l) /* linear in x */
@@ -218,10 +244,10 @@ enum {
 
 enum {
         Kx = -1, /* "top" class (see usecheck() and clsmerge()) */
-        Kw,
-        Kl,
-        Ks,
-        Kd
+        Kw,      // word, 32 bit intager
+        Kl,      // long, 64 bit intager
+        Ks,      // single, 32 bit float
+        Kd       // double, 64 bit float
 };
 
 #define KWIDE(k) ((k) & 1)
@@ -229,7 +255,7 @@ enum {
 
 struct Op {
         char *name;
-        short argcls[2][4];
+        short argcls[2][4]; /* value classes (Kw/Kl/Ks/Kd) */
         uint canfold : 1;
         uint hasid : 1;     /* op identity value? */
         uint idval : 1;     /* identity value 0/1 */

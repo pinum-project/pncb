@@ -31,9 +31,9 @@ SRCALL   = $(COMMOBJ:.o=.c) $(AMD64OBJ:.o=.c) $(ARM64OBJ:.o=.c) $(RV64OBJ:.o=.c)
 CC       = cc
 CFLAGS   = -std=c99 -O2 -g -Wall -Wextra -Wpedantic
 
-qbe: bin/qbe
+pncb: bin/pncb
 
-bin/qbe: $(OBJ)
+bin/pncb: $(OBJ)
 	$(CC) $(LDFLAGS) $(OBJ) -o $@
 
 $(BUILDDIR)/%.o: %.c
@@ -73,37 +73,37 @@ config.h:
 		;;                                     \
 	esac > $@
 
-install: qbe
+install: pncb
 	mkdir -p "$(DESTDIR)$(BINDIR)"
-	install -m755 bin/qbe "$(DESTDIR)$(BINDIR)/qbe"
+	install -m755 bin/pncb "$(DESTDIR)$(BINDIR)/pncb"
 
 uninstall:
-	rm -f "$(DESTDIR)$(BINDIR)/qbe"
+	rm -f "$(DESTDIR)$(BINDIR)/pncb"
 
 clean:
-	rm -f $(BUILDDIR)/*.o $(BUILDDIR)/*/*.o $(BUILDDIR)/qbe
+	rm -f $(BUILDDIR)/*.o $(BUILDDIR)/*/*.o $(BUILDDIR)/pncb
 
 release:
 	$(MAKE) clean
-	$(MAKE) CFLAGS="$(REL_CFLAGS)" bin/qbe
+	$(MAKE) CFLAGS="$(REL_CFLAGS)" bin/pncb
 
 clean-gen: clean
 	rm -f config.h
 
-check: qbe
-	bin=bin/qbe tools/test.sh all
+check: pncb
+	bin=bin/pncb tools/test.sh all
 
-check-x86_64: qbe
-	TARGET=x86_64 bin=bin/qbe tools/test.sh all
+check-x86_64: pncb
+	TARGET=x86_64 bin=bin/pncb tools/test.sh all
 
-check-arm64: qbe
-	TARGET=arm64 bin=bin/qbe tools/test.sh all
+check-arm64: pncb
+	TARGET=arm64 bin=bin/pncb tools/test.sh all
 
-check-rv64: qbe
-	TARGET=rv64 bin=bin/qbe tools/test.sh all
+check-rv64: pncb
+	TARGET=rv64 bin=bin/pncb tools/test.sh all
 
-check-amd64_win: qbe
-	TARGET=amd64_win bin=bin/qbe tools/test.sh all
+check-amd64_win: pncb
+	TARGET=amd64_win bin=bin/pncb tools/test.sh all
 
 src:
 	@echo $(SRCALL)
