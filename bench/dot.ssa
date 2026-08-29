@@ -1,0 +1,46 @@
+# dot kernel (QBE IL).
+# Fills two arrays from rand() (runtime-unknown, not foldable), then
+# multiply-accumulates. Mirrors bench/dot.c so checksums must match.
+# rand() returns a 32-bit word; we sign-extend to long before storing.
+
+export
+function l $bench(l %n) {
+@start
+	%arr =l alloc8 8192
+	%brr =l alloc8 8192
+@fill
+	%i  =w phi @start 0,     @fill1 %i1
+	%ci =w cslew %i, 1023        # i <= 1023
+	jnz %ci, @fill1, @dot
+@fill1
+	%r  =w call $rand()
+	%rl =l extsw %r
+	%ix =l extsw %i
+	%ox =l mul 8, %ix
+	%pa =l add %ox, %arr
+	storel %rl, %pa
+	%r2 =w call $rand()
+	%rl2 =l extsw %r2
+	%pb =l add %ox, %brr
+	storel %rl2, %pb
+	%i1 =w add %i, 1
+	jmp @fill
+@dot
+	%k  =l phi @fill 0,     @dot1 %k1
+	%s0 =l phi @fill 0,     @dot1 %s1
+	%ck =w cslel %k, %n          # k <= n
+	jnz %ck, @dot1, @end
+@dot1
+	%idx =l and %k, 1023
+	%m   =l mul 8, %idx
+	%ka  =l add %m, %arr
+	%va  =l loadl %ka
+	%kb  =l add %m, %brr
+	%vb  =l loadl %kb
+	%p   =l mul %va, %vb
+	%s1  =l add %s0, %p
+	%k1  =l add %k, 1
+	jmp @dot
+@end
+	ret %s0
+}

@@ -8,6 +8,12 @@
  * Released under the MIT License.
  */
 
+/*
+ * file: all.h
+ * Common inclusion among all files.
+ * Holds all the important data structure and enums.
+ */
+
 #include <assert.h>
 #include <inttypes.h>
 #include <limits.h>
@@ -90,8 +96,7 @@ struct BSet {
 
 /*
  * Reference to a value
- * By explicitly allocating, overrrides 32 bit allocation,
- * to assign the specific allocated size.
+ * By explicitly allocating, overrrides 32 bit allocation.
  */
 struct Ref {
         uint type : 3; // 3 bit allocated
@@ -244,8 +249,8 @@ enum {
 
 enum {
         Kx = -1, /* "top" class (see usecheck() and clsmerge()) */
-        Kw,      // word, 32 bit intager
-        Kl,      // long, 64 bit intager
+        Kw,      // word, 32 bit integer
+        Kl,      // long, 64 bit integer
         Ks,      // single, 32 bit float
         Kd       // double, 64 bit float
 };
@@ -268,31 +273,33 @@ struct Op {
         uint pinned : 1;    /* GCM pinned op? */
 };
 
+/* Instruction */
 struct Ins {
         uint op : 30;
         uint cls : 2;
-        Ref to;
+        Ref to; // the destination Ref: where the result is written (almost always an RTmp — a Tmp/SSA variable)
         Ref arg[2];
 };
 
 struct Phi {
         Ref to;
         short cls;
-        int visit;
-        uint narg;
-        Ref *arg;
-        Blk **blk;
-        Phi *link;
+        int visit; // treversal marker, dfs coloring
+        uint narg; // incoming predecessors
+        Ref *arg;  // value per predecessor
+        Blk **blk; // predecessor block for each, blk[i]
+        Phi *link; // next phi in this block (phis are a linked list)
 };
 
+/* Basic block */
 struct Blk {
-        Phi *phi;
-        Ins *ins;
-        uint nins;
+        Phi *phi;  // pointer to the first phi node
+        Ins *ins;  // pointer to the array of instructions
+        uint nins; // number of instructions
         struct {
                 short type;
                 Ref arg;
-        } jmp;
+        } jmp; // terminator struct
         Blk *s1;
         Blk *s2;
         Blk *link;

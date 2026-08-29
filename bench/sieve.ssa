@@ -1,0 +1,53 @@
+# sieve kernel (QBE IL).
+# Counts primes <= N by sieve of Eratosthenes.
+# Mirrors bench/sieve.c so the per-iteration checksum must match (5761455).
+# char array via malloc; memset to 1; clear 0 and 1; cross off multiples;
+# finally count set bytes.
+
+export
+function l $bench(l %N) {
+@start
+	%sz  =l add %N, 1
+	%is  =l call $malloc(l %sz)
+	%m   =l call $memset(l %is, w 1, l %sz)
+	storeb 0, %is
+	%o1  =l add %is, 1
+	storeb 0, %o1
+@outer
+	%i   =l phi @start 2,     @outer1 %i1
+	%ii  =l mul %i, %i
+	%cmp =w cslel %ii, %N
+	jnz %cmp, @body, @count
+@body
+	%j0  =l mul %i, %i
+	%base =l add %is, %i
+	%b   =w loadub %base
+	jnz %b, @inner, @outer1
+@inner
+	%j   =l phi @body %j0,    @dobody %j1
+	%cj  =w cslel %j, %N
+	jnz %cj, @dobody, @outer1
+@dobody
+	%pj  =l add %is, %j
+	storeb 0, %pj
+	%j1  =l add %j, %i
+	jmp @inner
+@outer1
+	%i1  =l add %i, 1
+	jmp @outer
+@count
+	%k   =l phi @outer 2,     @countbody %k1
+	%cnt =l phi @outer 0,     @countbody %cnt1
+	%ck  =w cslel %k, %N
+	jnz %ck, @countbody, @done
+@countbody
+	%kk  =l add %is, %k
+	%bv  =w loadub %kk
+	%bvl =l extsw %bv
+	%cnt1 =l add %cnt, %bvl
+	%k1  =l add %k, 1
+	jmp @count
+@done
+	call $free(l %is)
+	ret %cnt
+}
