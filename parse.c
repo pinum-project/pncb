@@ -8,6 +8,8 @@
  * Released under the MIT License.
  */
 
+/* Lexer + parser */
+
 #include "all.h"
 #include <ctype.h>
 #include <stdarg.h>

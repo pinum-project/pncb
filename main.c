@@ -13,7 +13,7 @@
 #include <ctype.h>
 #include <getopt.h>
 
-int optlevel = 0; // 0 = -O0 by default, 1 = -O1
+int optlevel = 1; // 1 = -O1 by default (tests expect optimized), 0 = -O0
 Target T;
 
 char debug['Z' + 1] = {
@@ -44,12 +44,12 @@ static Target *tlist[] = {
     &T_arm64,
     &T_arm64_apple,
     &T_rv64,
-    0};
+    0,
+};
 static FILE *outf;
 static int dbg;
 
-static void
-data(Dat *d) {
+static void data(Dat *d) {
         if (dbg) {
                 return;
         }
@@ -60,8 +60,7 @@ data(Dat *d) {
         }
 }
 
-static void
-func(Fn *fn) {
+static void func(Fn *fn) {
         uint n;
 
         if (dbg) {
@@ -87,20 +86,27 @@ func(Fn *fn) {
         filluse(fn);
         filldom(fn);
         ssacheck(fn);
-        gvn(fn);
+        // simplcfg must run even at -O0 to fold constant jnz (e.g. jnz 1) before isel seljmp RTmp assert
         fillcfg(fn);
         simplcfg(fn);
         filluse(fn);
         filldom(fn);
-        gcm(fn);
-        filluse(fn);
-        ssacheck(fn);
-        if (T.cansel) {
-                ifconvert(fn);
+        if (OPTIMIZE) {
+                gvn(fn);
                 fillcfg(fn);
+                simplcfg(fn);
                 filluse(fn);
                 filldom(fn);
+                gcm(fn);
+                filluse(fn);
                 ssacheck(fn);
+                if (T.cansel) {
+                        ifconvert(fn);
+                        fillcfg(fn);
+                        filluse(fn);
+                        filldom(fn);
+                        ssacheck(fn);
+                }
         }
         T.abi1(fn);
         simpl(fn);
@@ -134,8 +140,7 @@ func(Fn *fn) {
         freeall();
 }
 
-static void
-dbgfile(char *fn) {
+static void dbgfile(char *fn) {
         emitdbgfile(fn, outf);
 }
 
@@ -205,7 +210,7 @@ int main(int ac, char *av[]) {
                         }
                         fprintf(hf, "\n");
                         fprintf(hf, "\t%-11s dump debug information\n", "-d <flags>");
-                        fprintf(hf, "\t%-11s optimization level (0,1, default 0)\n", "-O[level]");
+                        fprintf(hf, "\t%-11s optimization level (0,1, default 1)\n", "-O[level]");
                         exit(c != 'h');
                 }
         }

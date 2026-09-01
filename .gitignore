@@ -5,5 +5,7 @@ config.h
 *.out
 *~
 
+change_plan.md
+
 bin/*
 !bin/.gitkeep

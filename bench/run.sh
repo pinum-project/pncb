@@ -55,27 +55,37 @@ for k in $KERNELS; do
 	$CLANG -O3 -o $TMP/${k}_clangO3 $cf $DRIVER
 	$GCC   -O2 -o $TMP/${k}_gccO2   $cf $DRIVER
 
-	# feather via QBE IL: IL -> asm -> link with driver
-	$FEATHER -o $TMP/${k}.s $sf
-	$CC -o $TMP/${k}_feather $TMP/${k}.s $DRIVER
+	# feather via QBE IL: IL -> asm -> link with driver (both -O0 and -O1)
+	$FEATHER -O0 -o $TMP/${k}_O0.s $sf
+	$CC -o $TMP/${k}_feather_O0 $TMP/${k}_O0.s $DRIVER
+	$FEATHER -O1 -o $TMP/${k}_O1.s $sf
+	$CC -o $TMP/${k}_feather_O1 $TMP/${k}_O1.s $DRIVER
 
 	r_clang=$(best_of $TMP/${k}_clangO2)
 	r_clang3=$(best_of $TMP/${k}_clangO3)
 	r_gcc=$(best_of $TMP/${k}_gccO2)
-	r_feather=$(best_of $TMP/${k}_feather)
+	r_feather0=$(best_of $TMP/${k}_feather_O0)
+	r_feather1=$(best_of $TMP/${k}_feather_O1)
 
 	c_clang=$(echo $r_clang | cut -d' ' -f2)
-	c_feather=$(echo $r_feather | cut -d' ' -f2)
+	c_feather0=$(echo $r_feather0 | cut -d' ' -f2)
+	c_feather1=$(echo $r_feather1 | cut -d' ' -f2)
 
 	printf "  clang -O2 : %s s   (chk %s)\n" "$(echo $r_clang | cut -d' ' -f1)" "$c_clang"
 	printf "  clang -O3 : %s s   (chk %s)\n" "$(echo $r_clang3 | cut -d' ' -f1)" "$(echo $r_clang3 | cut -d' ' -f2)"
 	printf "  gcc   -O2 : %s s   (chk %s)\n" "$(echo $r_gcc | cut -d' ' -f1)" "$(echo $r_gcc | cut -d' ' -f2)"
-	printf "  feather      : %s s   (chk %s)\n" "$(echo $r_feather | cut -d' ' -f1)" "$c_feather"
+	printf "  feather -O0: %s s   (chk %s)\n" "$(echo $r_feather0 | cut -d' ' -f1)" "$c_feather0"
+	printf "  feather -O1: %s s   (chk %s)\n" "$(echo $r_feather1 | cut -d' ' -f1)" "$c_feather1"
 
-	if [ "$c_clang" = "$c_feather" ]; then
-		echo "  CHECKSUM: OK (feather == clang -O2)"
+	if [ "$c_clang" = "$c_feather0" ]; then
+		echo "  CHECKSUM O0: OK (feather -O0 == clang -O2)"
 	else
-		echo "  CHECKSUM: MISMATCH (feather=$c_feather clang=$c_clang)  <-- correctness bug"
+		echo "  CHECKSUM O0: MISMATCH (feather -O0=$c_feather0 clang=$c_clang)  <-- correctness bug"
+	fi
+	if [ "$c_clang" = "$c_feather1" ]; then
+		echo "  CHECKSUM O1: OK (feather -O1 == clang -O2)"
+	else
+		echo "  CHECKSUM O1: MISMATCH (feather -O1=$c_feather1 clang=$c_clang)  <-- correctness bug"
 	fi
 	echo
 done

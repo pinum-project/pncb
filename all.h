@@ -383,15 +383,18 @@ struct Alias {
         Alias *slot;
 };
 
+/* Temporary Variables */
 struct Tmp {
         char *name;
+        // pointers to the instructions defining and using this variable
         Ins *def;
         Use *use;
-        uint ndef, nuse;
-        uint bid; /* id of a defining block */
-        uint cost;
-        int slot; /* -1 for unset */
-        short cls;
+
+        uint ndef, nuse; // number of times this variable defined and used
+        uint bid;        /* id of a defining block */
+        uint cost;       // spill cost
+        int slot;        /* -1 for unset */
+        short cls;       // type w,l,s,d
         struct {
                 int r;  /* register or -1 */
                 int w;  /* weight */
@@ -414,9 +417,9 @@ struct Tmp {
 
 struct Con {
         enum {
-                CUndef,
-                CBits,
-                CAddr,
+                CUndef, // empty
+                CBits,  // plain number
+                CAddr,  // symbol + offset like $str+8
         } type;
         Sym sym;
         union {
@@ -436,34 +439,37 @@ struct Addr { /* amd64 addressing */
         int scale;
 };
 
+// how the linker is linked in the linker
 struct Lnk {
         char export;
         char thread;
         char common;
-        char align;
+        char align; // log2 alignment
         char *sec;
         char *secf;
 };
 
 struct Fn {
         Blk *start;
+        // Dynamic arrays holding temporaries, constants and memory offset
         Tmp *tmp;
         Con *con;
         Mem *mem;
+        // number of tmp, con, mem and Blks
         int ntmp;
         int ncon;
         int nmem;
         uint nblk;
         int retty; /* index in typ[], -1 if no aggregate return */
         Ref retr;
-        Blk **rpo;
-        bits reg;
+        Blk **rpo; // array of Blk**
+        bits reg;  // bitmask of live regs
         int slot;
-        int salign;
-        char vararg;
-        char dynalloc;
-        char leaf;
-        char *name;
+        int salign;    // stack alignment constant
+        char vararg;   // accepts variable args?
+        char dynalloc; // function allocates dynamic stack memory?
+        char leaf;     // function makes call to no other functions?
+        char *name;    // symbol name of the function
         Lnk lnk;
 };
 

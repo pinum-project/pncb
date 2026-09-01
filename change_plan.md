@@ -1,87 +1,54 @@
-# QBE Optimization — Change Plan (quilcb backend)
+# QBE Optimization — Change Plan for -O1 vs clang -O3 (feather backend)
 
-Goal: make QBE-generated code fast enough to rival LLVM for the quilcb
-compiler backend (runtime perf target; not trying to beat LLVM outright).
+Goal: `feather -O1` within 10-30% of `clang -O3` on quilcb runtime kernels, correctness first.
 
-## Bugs found (do not lose these)
+## Current state (2026-09-01)
 
-### BUG-1 [CONFIRMED QBE CORRECTNESS BUG — silent wrong code]
-Loop transformation drops the final iteration.
+- Flag: `all.h:24` `extern int optlevel` + `#define OPTIMIZE (optlevel>=1)`, `main.c:16` `optlevel=1` default (tests expect optimized), `main.c:150` `getopt "hd:O::o:t:"` handles `-O`/`-O0`/`-O1`, `main.c:206` help `-O[level] default 1`.
+- Pipeline `main.c:63` `func()`: `T.abi0` -> `promote`/`ssa`/`loadopt`/`coalesce` -> **always** `fillcfg/simplcfg` (folds `jnz 1` for isel `amd64/isel.c:623` `RTmp` assert, fixes `test/mem3.ssa:18`) -> `if(OPTIMIZE){ gvn/simplcfg/gcm/ifconvert }` -> `T.abi1/simpl/T.isel` -> `live/loop/cost/spill/rega` -> `emit`. `make check` `59/59 All is fine!` after fix.
+- Bench `bench/run.sh:58` now builds both `feather -O0` and `-O1` vs `clang -O2/-O3`/`gcc -O2`, `best_of 5`, checksum vs `clang -O2`. `REPS=200 ./bench/run.sh dot` currently `O0/O1` both `OK -7858044056580261105`, `sieve.sh` `OK 5761455` — workarounds mask bugs.
 
-- Symptom: a bottom-checked loop of the form
-    load/compute body; idx++; if (idx < n) continue;
-  produces code where the exit test (`cmp`/`jge`) is hoisted ABOVE the
-  body's trailing multiply/accumulate, so for the last index the element
-  is loaded but never accumulated.
-- Repro: bench/dot.ssa (original version, before the top-checked rewrite).
-  Generated asm had `jge .Lbb6` (exit) BEFORE `imulq` (multiply). Sum was
-  short by exactly a[last]*b[last].
-- Trigger: any loop whose exit test is placed AFTER the index increment
-  and whose body has a trailing op that the scheduler floats the compare
-  ahead of. Classic do-while-turned-while rotation bug in gcm/isel.
-- Impact: SILENT wrong numerical results. High severity for a backend.
-- Workaround used: rewrite as a top-checked `for` loop
-  (check `idx < n` BEFORE the body). The top-checked form codegens
-  correctly.
-- TODO: root-cause in gcm.c (loop rotation / code motion) and add a
-  regression test under test/.
+## Bugs (keep)
 
-### BUG-2 [SUSPECTED QBE MISCOMPILE — needs minimal repro]
-Cross-loop phi sum accumulation loses iterations.
+### BUG-1 [CONFIRMED, now workarounded, needs repro]
+Bottom-checked `do { load/mul/add; k++; } while(k<=n)` hoists `cmp/jle` before `imul` in `gcm.c`, drops last `a[last]*b[last]`. Repro was `bench/dot.ssa` bottom form, asm showed `jge` before `imul`. Workaround: top-checked `cslel k<=n` before body `bench/dot.ssa:7`. Attempted repro `/tmp/bug1_bottom.ssa` (bottom `jmp @body; phi @dot/@body; ret %s1`) now passes both `O0/O1` vs clang for `n=0..2000` after fixing `ret %s0->%s1` authoring bug — no miscompile observed, original rotation bug likely fixed or needs more precise `pinned` pattern. TODO: add minimal `test/bug1_gcm.ssa` regression under `test/` that fails on old `gcm`.
 
-- Symptom: carrying a running total through nested loops via a single
-  phi chain (inner-exit: `sumx = sumc + it0`; outer-phi: `sum1 = sumx`)
-  caused QBE to accumulate the add only ONCE per outer iteration
-  (added only the final pixel's `it`), massively under-counting.
-- Repro: first version of bench/mandel.ssa.
-- Workaround used: give the inner loop its OWN local accumulator
-  (`xsum` phi inside x-loop) and carry only the row subtotal across the
-  outer loop. That form is correct.
-- TODO: confirm whether this is a QBE phi/SSA bug or an IL mistake.
-  Build a minimal single/dual-loop sum repro and diff against clang.
+### BUG-2 [SUSPECTED, needs repro]
+Nested phi `sumx = sumc+it` single chain across outer phi loses inner iters, only last pixel counted. Repro `bench/mandel.ssa` first version no longer exists, `test/mandel.ssa` is printer not accumulator. Workaround: inner `xsum` phi + row subtotal. TODO: minimal dual-loop sum repro.
 
-### IL authoring pitfalls (NOT QBE bugs — logged to avoid churn)
-These were my mistakes writing QBE IL by hand; record so we don't
-waste time re-debugging them:
-- Function header is `function l $name(t %a) {` — return type BEFORE
-  the name, NO trailing type before `{`. (`function l $bench(l %i) l {`
-  fails with "function body must start with {", but ONLY the trailing
-  ` l` is the error.)
-- `export` must be on its own line, then `function ...` on the next.
-- There is no `loadb`; use `loadub` (or `loadsb`) for byte loads.
-  Stores: `storeb`.
-- There is no `cltl`; for signed long compare use `csltl` (unsigned
-  `cultl`). `cltd` is the DOUBLE (float) less-than.
-- Phi predecessors must exactly match the block's actual predecessors
-  (e.g., `@sieve` is reached from `@init`, not `@start`).
-- Single-precision float constant literal is `s_0.5`; double is `d_0.5`.
-- `sltof` converts long -> single (float), not double. `stosi` converts
-  float -> long for the final return.
+### IL pitfalls
+`function l $name` header, `export` newline, `loadub` not `loadb`, `csltl` not `cltl`, phi preds match `Blok.pred`, `s_0.5` vs `d_0.5`, `sltof` etc. — see prior version.
 
-## Benchmark methodology (current)
-- bench/driver.c: `main` reads `reps` from argv[1], loops calling
-  `bench(i)`, prints a checksum (prevents dead-code elimination).
-- bench/run.sh: builds a full EXECUTABLE for each kernel with
-  clang -O2, clang -O3, gcc -O2, and QBE, then times the actual
-  binaries externally (best-of-5 wall clock) and checks the QBE
-  checksum matches clang -O2.
-- Kernels (matched C source + QBE IL):
-  - sieve : integer + memory (Eratosthenes), n varies with i.
-  - mandel: double FP escape-time over a grid; NON-vectorizable toy,
-            not representative of real loops.
-  - dot   : float dot product with non-reducible fill; clang vectorizes
-            (mulps), QBE stays scalar.
+## Benchmark methodology (new)
+- `bench/driver.c` anti-DCE checksum loop over `bench(i)` varying `i`.
+- `bench/run.sh` `REPS=2000 ./run.sh [sum|dot|sieve]` builds `clang -O2/-O3`, `gcc -O2`, `feather -O0`, `feather -O1`, times best-of-5 wall, 2 checksum checks `O0==clang-O2` and `O1==clang-O2`.
+- Target to beat: `clang -O3` (vectorization, LICM, unroll). Current gap largest on `dot` (scalar vs `mulps`), `sieve` memory, `sum` trivial.
 
-## Optimization plan (from earlier analysis)
-Tier 0 (in quilcb lowering — cheapest, biggest wins, no QBE changes):
-  - inlining (QBE has none), SROA / scalar replacement, trivial LICM.
-Tier 1 (QBE mid-end passes):
-  - LICM using existing fillloop (cfg.c) infrastructure — biggest missing opt.
-  - PRE over gvn.c (kill partially-redundant loads in loops).
-  - strength reduction / induction variables.
-Tier 2 (register allocation, rega.c / spill.c):
-  - cut spills in loops (spills destroy loop perf).
-Tier 3 (codegen, e.g. amd64/isel.c):
-  - indexed addressing modes (base+idx*scale) for array indexing.
-Realistic target: within ~10-30% of LLVM -O2 once inlining+SROA+loop
-opts land. Beating LLVM outright needs vectorization.
+## Plan to get -O1 competing with clang -O3
+
+### Tier 0 — quilcb lowering (no QBE change, biggest win)
+- [ ] Inlining (QBE has none) — inline hot `bench` callees.
+- [ ] SROA / scalar replacement of `alloc8` aggregates (`mem.c` promote only covers simple slots).
+- [ ] Trivial LICM in lowering for loop invariants.
+
+### Tier 1 — QBE mid-end (inside `if(OPTIMIZE)`)
+- [ ] LICM proper via `cfg.c:fillloop` + `gcm.c` — currently `gcm` only hoists, not full loop-invariant code motion for memory. Add `alias` `NoAlias` hoist for `load`.
+- [ ] PRE over `gvn.c` — partially redundant loads in loops (kill reloads in `dot`/`sieve` inner).
+- [ ] Strength reduction / IV opts — `mul 8*idx` -> `add` chain, `and 1023` mask folding (`copy.c`/`fold.c`/`simpl.c`).
+- [ ] Loop rotation fix + test: ensure bottom-checked correctly handled (fix `gcm.c:112` `uselatebid` uninit warning).
+
+### Tier 2 — Regalloc
+- [ ] `spill.c`/`rega.c` — cut spills in loops (`fillcost` loop depth weight, `hint` avoid). Spills destroy `dot` inner loop.
+
+### Tier 3 — Codegen
+- [ ] `amd64/isel.c` indexed `Addr` `all.h:428` `base+idx*scale+disp` for `a[idx]` (`amatch` `Pobis` etc., already via `Num` `all.h:349` `runmatch`), ensure `dot` uses it not `mul+add`.
+- [ ] `arm64`/`rv64` parity.
+- [ ] Vectorization — long term; need to close 2x gap on `dot` where `clang -O3` uses `mulps`. Without, target 10-30% requires other tiers to compensate.
+
+### Metrics
+- Success = `feather -O1` time within 30% of `clang -O3` on `dot`/`sieve`/`sum` average, checksums `OK` for both `O0`/`O1`, `make check` `All is fine!` and `tools/test.sh` regression for BUG-1/2.
+
+### Next steps
+1. Land minimal repros `test/bug1_*.ssa` + `test/bug2_*.ssa` with `expected checksum` harness.
+2. Implement Tier1 LICM/PRE behind `OPTIMIZE`, bench `REPS=2000` before/after.
+3. Iterate Tier2/3, keep `bench/run.sh` dual `-O0`/`-O1` as gate.
