@@ -13,6 +13,7 @@
 #include <ctype.h>
 #include <getopt.h>
 
+int optlevel = 0; // 0 = -O0 by default, 1 = -O1
 Target T;
 
 char debug['Z' + 1] = {
@@ -146,8 +147,15 @@ int main(int ac, char *av[]) {
 
         T    = Deftgt;
         outf = stdout;
-        while ((c = getopt(ac, av, "hd:o:t:")) != -1) {
+        while ((c = getopt(ac, av, "hd:O::o:t:")) != -1) {
                 switch (c) {
+                case 'O':
+                        if (!optarg || optarg[0] == '\0') {
+                                optlevel = 1; // bare -O =>1
+                        } else {
+                                optlevel = atoi(optarg); // handles -O0, -O1, -O2
+                        }
+                        break;
                 case 'd':
                         for (; *optarg; optarg++) {
                                 if (isalpha(*optarg)) {
@@ -197,6 +205,7 @@ int main(int ac, char *av[]) {
                         }
                         fprintf(hf, "\n");
                         fprintf(hf, "\t%-11s dump debug information\n", "-d <flags>");
+                        fprintf(hf, "\t%-11s optimization level (0,1, default 0)\n", "-O[level]");
                         exit(c != 'h');
                 }
         }

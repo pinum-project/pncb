@@ -21,6 +21,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+extern int optlevel;
+#define OPTIMIZE (optlevel >= 1)
+
 #define MAKESURE(what, x) typedef char make_sure_##what[(x) ? 1 : -1]
 #define die(...) die_(__FILE__, __VA_ARGS__)
 
@@ -299,10 +302,10 @@ struct Blk {
         struct {
                 short type;
                 Ref arg;
-        } jmp; // terminator struct
-        Blk *s1;
-        Blk *s2;
-        Blk *link;
+        } jmp;     // terminator struct
+        Blk *s1;   // successor 1 (fall-through / target; set for Jjmp/Jnz)
+        Blk *s2;   // successor 2 (branch target for Jnz, else null)
+        Blk *link; // next block
 
         uint id;
         uint visit;
@@ -313,7 +316,7 @@ struct Blk {
         uint nfron;
         int depth;
 
-        Blk **pred;
+        Blk **pred; // predecessor array
         uint npred;
         BSet in[1], out[1], gen[1];
         int nlive[2];
@@ -321,18 +324,19 @@ struct Blk {
         char *name;
 };
 
+/* Tmp use site */
 struct Use {
         enum {
                 UXXX,
                 UPhi,
                 UIns,
                 UJmp,
-        } type;
-        uint bid;
+        } type;   // use kind
+        uint bid; // Blk.id of use site
         union {
                 Ins *ins;
                 Phi *phi;
-        } u;
+        } u; // site pointer, NULL for UJump
 };
 
 struct Sym {
