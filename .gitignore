@@ -1,5 +1,5 @@
 *.o
-pncb
+feather
 config.h
 .comfile
 *.out

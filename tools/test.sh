@@ -2,7 +2,7 @@
 
 dir=`dirname "$0"`
 if [ -z "${bin:-}" ]; then
-	bin=$dir/../pncb
+	bin=$dir/../bin/feather
 fi
 if [ -z "${binref:-}" ]; then
 	binref=${bin}.ref
@@ -177,7 +177,7 @@ once() {
 
 	if ! $bin -o $asm $t
 	then
-		echo "[pncb fail]"
+		echo "[feather fail]"
 		return 1
 	fi
 

@@ -2,8 +2,8 @@
 # Original QBE Codebase
 # Copyright (c) 2015-2026 Quentin Carbonneaux <quentin@c9x.me>
 #
-# Modifications for PiNum Compiler Backend (pncb)
-# Copyright (c) 2026-present PiNum Project Authors
+# Modifications for Quil Compiler Backend (feather)
+# Copyright (c) 2026-present Quil Project Authors
 #
 # Released under the MIT License.
 #
@@ -31,9 +31,9 @@ SRCALL   = $(COMMOBJ:.o=.c) $(AMD64OBJ:.o=.c) $(ARM64OBJ:.o=.c) $(RV64OBJ:.o=.c)
 CC       = cc
 CFLAGS   = -std=c99 -O2 -g -Wall -Wextra -Wpedantic
 
-pncb: bin/pncb
+feather: bin/feather
 
-bin/pncb: $(OBJ)
+bin/feather: $(OBJ)
 	$(CC) $(LDFLAGS) $(OBJ) -o $@
 
 $(BUILDDIR)/%.o: %.c
@@ -73,37 +73,37 @@ config.h:
 		;;                                     \
 	esac > $@
 
-install: pncb
+install: feather
 	mkdir -p "$(DESTDIR)$(BINDIR)"
-	install -m755 bin/pncb "$(DESTDIR)$(BINDIR)/pncb"
+	install -m755 bin/feather "$(DESTDIR)$(BINDIR)/feather"
 
 uninstall:
-	rm -f "$(DESTDIR)$(BINDIR)/pncb"
+	rm -f "$(DESTDIR)$(BINDIR)/feather"
 
 clean:
-	rm -f $(BUILDDIR)/*.o $(BUILDDIR)/*/*.o $(BUILDDIR)/pncb
+	rm -f $(BUILDDIR)/*.o $(BUILDDIR)/*/*.o $(BUILDDIR)/feather
 
 release:
 	$(MAKE) clean
-	$(MAKE) CFLAGS="$(REL_CFLAGS)" bin/pncb
+	$(MAKE) CFLAGS="$(REL_CFLAGS)" bin/feather
 
 clean-gen: clean
 	rm -f config.h
 
-check: pncb
-	bin=bin/pncb tools/test.sh all
+check: feather
+	bin=bin/feather tools/test.sh all
 
-check-x86_64: pncb
-	TARGET=x86_64 bin=bin/pncb tools/test.sh all
+check-x86_64: feather
+	TARGET=x86_64 bin=bin/feather tools/test.sh all
 
-check-arm64: pncb
-	TARGET=arm64 bin=bin/pncb tools/test.sh all
+check-arm64: feather
+	TARGET=arm64 bin=bin/feather tools/test.sh all
 
-check-rv64: pncb
-	TARGET=rv64 bin=bin/pncb tools/test.sh all
+check-rv64: feather
+	TARGET=rv64 bin=bin/feather tools/test.sh all
 
-check-amd64_win: pncb
-	TARGET=amd64_win bin=bin/pncb tools/test.sh all
+check-amd64_win: feather
+	TARGET=amd64_win bin=bin/feather tools/test.sh all
 
 src:
 	@echo $(SRCALL)

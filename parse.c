@@ -2,8 +2,8 @@
  * Original QBE Codebase
  * Copyright (c) 2015-2026 Quentin Carbonneaux <quentin@c9x.me>
  *
- * Modifications for PiNum Compiler Backend (pncb)
- * Copyright (c) 2026-present PiNum Project Authors
+ * Modifications for Quil Compiler Backend (feather)
+ * Copyright (c) 2026-present Quil Project Authors
  *
  * Released under the MIT License.
  */
@@ -187,7 +187,7 @@ void err(char *s, ...) {
         va_list ap;
 
         va_start(ap, s);
-        fprintf(stderr, "pncb:%s:%d: ", inpath, lnum);
+        fprintf(stderr, "feather:%s:%d: ", inpath, lnum);
         vfprintf(stderr, s, ap);
         fprintf(stderr, "\n");
         va_end(ap);

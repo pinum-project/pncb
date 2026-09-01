@@ -1,6 +1,6 @@
-# QBE Optimization — Change Plan (pinumcb backend)
+# QBE Optimization — Change Plan (quilcb backend)
 
-Goal: make QBE-generated code fast enough to rival LLVM for the pinumcb
+Goal: make QBE-generated code fast enough to rival LLVM for the quilcb
 compiler backend (runtime perf target; not trying to beat LLVM outright).
 
 ## Bugs found (do not lose these)
@@ -73,7 +73,7 @@ waste time re-debugging them:
             (mulps), QBE stays scalar.
 
 ## Optimization plan (from earlier analysis)
-Tier 0 (in pinumcb lowering — cheapest, biggest wins, no QBE changes):
+Tier 0 (in quilcb lowering — cheapest, biggest wins, no QBE changes):
   - inlining (QBE has none), SROA / scalar replacement, trivial LICM.
 Tier 1 (QBE mid-end passes):
   - LICM using existing fillloop (cfg.c) infrastructure — biggest missing opt.

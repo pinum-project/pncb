@@ -1,5 +1,5 @@
 /*
- * Benchmark driver for the pncb backend.
+ * Benchmark driver for the feather backend.
  * Calls bench(i) repeatedly and prints a checksum (anti-DCE) and wall time.
  * The actual kernel is provided by the linked object (C or QBE IL).
  */
