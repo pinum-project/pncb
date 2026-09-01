@@ -6,6 +6,7 @@ config.h
 *~
 
 change_plan.md
+visual.txt
 
 bin/*
 !bin/.gitkeep

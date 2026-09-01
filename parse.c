@@ -196,8 +196,7 @@ void err(char *s, ...) {
         exit(1);
 }
 
-static void
-lexinit() {
+static void lexinit() {
         static int done;
         int i;
         long h;
@@ -221,8 +220,7 @@ lexinit() {
         done = 1;
 }
 
-static int64_t
-getint() {
+static int64_t getint() {
         uint64_t n;
         int c, m;
 
@@ -246,8 +244,7 @@ getint() {
         return *(int64_t *)&n;
 }
 
-static int
-lex() {
+static int lex() {
         int c, i, esc;
         int t;
 
