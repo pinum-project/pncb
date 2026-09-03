@@ -1,4 +1,11 @@
 #!/usr/bin/python3
+# Original QBE Codebase
+# Copyright (c) 2015-2026 Quentin Carbonneaux <quentin@c9x.me>
+#
+# Modifications for Quil Compiler Backend (feather)
+# Copyright (c) 2026-present Quil Project Authors
+#
+# Released under the MIT License.
 
 # support script to create
 # the abi8.ssa test

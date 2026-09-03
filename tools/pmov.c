@@ -1,3 +1,13 @@
+/*
+ * Original QBE Codebase
+ * Copyright (c) 2015-2026 Quentin Carbonneaux <quentin@c9x.me>
+ *
+ * Modifications for Quil Compiler Backend (feather)
+ * Copyright (c) 2026-present Quil Project Authors
+ *
+ * Released under the MIT License.
+ */
+
 /*% rm -f rega.o main.o && cc -g -std=c99 -Wall -DTEST_PMOV -o pmov % *.o
  *
  * This is a test framwork for the dopm() function
