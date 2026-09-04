@@ -27,13 +27,30 @@ void il_set_insert_point(ILBuilder *ilb, Blk *blk) {
 Blk *il_get_insert_block(ILBuilder *ilb) {
         return ilb->cur;
 }
+Blk *il_create_block(ILBuilder *ilb, const char *name) {
+        Blk *b  = newblk();
+        b->name = strf(PFn, "%s", name);
+        b->id   = ilb->fn->nblk++;
+
+        if (!ilb->fn->start) {
+                ilb->fn->start = b;
+        } else {
+                Blk *t = ilb->fn->start;
+                while (t->link) {
+                        t       = t->link;
+                        t->link = b;
+                }
+        }
+
+        return b;
+}
 Fn *il_create_function(const char *name, int retty, Lnk *lnk) {
         Fn *fn  = alloc(sizeof(Fn));
         *fn     = (Fn){0};
         fn->tmp = vnew(0, sizeof(Tmp), PFn);
         fn->con = vnew(0, sizeof(Con), PFn);
         for (int i = 0; i < Tmp0; i++) {
-                newtmp(0, Kd, fn);
+                newtmp(0, T.fpr0 <= i && i < T.fpr0 + T.nfpr ? Kd : Kl, fn);
         }
 
         fn->con[0] = (Con){.type = CBits};
@@ -69,4 +86,27 @@ Fn *il_finish(ILBuilder *ilb) {
         }
 
         return fn;
+}
+
+/*------------------ CONSTANT -----------------*/
+Ref il_const_int_w(ILBuilder *ilb, int32_t v) {
+        return getcon((int64_t)v, ilb->fn);
+}
+Ref il_const_int_l(ILBuilder *ilb, int64_t v) {
+        return getcon(v, ilb->fn);
+}
+Ref il_const_float_s(ILBuilder *ilb, float v) {
+        Con c = {.type = CBits, .flt = 1, .bits.s = v};
+        return newcon(&c, ilb->fn);
+}
+Ref il_const_float_d(ILBuilder *ilb, double v) {
+        Con c = {.type = CBits, .flt = 2, .bits.d = v}; // flt 2=d
+        return newcon(&c, ilb->fn);
+}
+Ref il_const_undef(ILBuilder *ilb) {
+        (void)ilb;
+        return UNDEF;
+}
+Ref il_const_zero(ILBuilder *ilb) {
+        return getcon(0, ilb->fn);
 }
