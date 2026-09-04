@@ -93,8 +93,13 @@ release:
 clean-gen: clean
 	rm -f config.h
 
+check-apitest: feather
+	@tools/apitest.sh all
+
 check: feather
 	bin=bin/feather tools/test.sh all
+
+check-all: check check-apitest
 
 check-x86_64: feather
 	TARGET=x86_64 bin=bin/feather tools/test.sh all

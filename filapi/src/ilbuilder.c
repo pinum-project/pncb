@@ -34,21 +34,25 @@ Blk *il_create_block(ILBuilder *ilb, const char *name) {
 
         if (!ilb->fn->start) {
                 ilb->fn->start = b;
+                if (!ilb->cur) {
+                        ilb->cur = b;
+                }
         } else {
                 Blk *t = ilb->fn->start;
                 while (t->link) {
-                        t       = t->link;
-                        t->link = b;
+                        t = t->link;
                 }
+                t->link = b;
         }
 
         return b;
 }
 Fn *il_create_function(const char *name, int retty, Lnk *lnk) {
-        Fn *fn  = alloc(sizeof(Fn));
-        *fn     = (Fn){0};
-        fn->tmp = vnew(0, sizeof(Tmp), PFn);
-        fn->con = vnew(0, sizeof(Con), PFn);
+        Fn *fn   = alloc(sizeof(Fn));
+        *fn      = (Fn){0};
+        fn->tmp  = vnew(0, sizeof(Tmp), PFn);
+        fn->con  = vnew(2, sizeof(Con), PFn);
+        fn->ncon = 2;
         for (int i = 0; i < Tmp0; i++) {
                 newtmp(0, T.fpr0 <= i && i < T.fpr0 + T.nfpr ? Kd : Kl, fn);
         }
