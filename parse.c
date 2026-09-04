@@ -352,16 +352,14 @@ Alpha:
         return t;
 }
 
-static int
-peek() {
+static int peek() {
         if (thead == Txxx) {
                 thead = lex();
         }
         return thead;
 }
 
-static int
-next() {
+static int next() {
         int t;
 
         t     = peek();
@@ -369,16 +367,14 @@ next() {
         return t;
 }
 
-static int
-nextnl() {
+static int nextnl() {
         int t;
 
         while ((t = next()) == Tnl);
         return t;
 }
 
-static void
-expect(int t) {
+static void expect(int t) {
         static char *ttoa[] = {
             [Tlbl]    = "label",
             [Tcomma]  = ",",
@@ -403,8 +399,7 @@ expect(int t) {
         err(buf);
 }
 
-static Ref
-tmpref() {
+static Ref tmpref() {
         int t, i;
 
         if (tmphcap / 2 <= curf->ntmp - Tmp0) {
@@ -431,8 +426,7 @@ tmpref() {
         return TMP(t);
 }
 
-static Ref
-parseref() {
+static Ref parseref() {
         Con c;
         int tok;
 
@@ -478,8 +472,7 @@ parseref() {
         return newcon(&c, curf);
 }
 
-static int
-findtyp(int i) {
+static int findtyp(int i) {
         while (--i >= 0) {
                 if (strcmp(tokval.str, typ[i].name) == 0) {
                         return i;
@@ -488,8 +481,7 @@ findtyp(int i) {
         err("undefined type :%s", tokval.str);
 }
 
-static int
-parsecls(int *tyn) {
+static int parsecls(int *tyn) {
         switch (next()) {
         default:
                 err("invalid class specifier");
@@ -515,8 +507,7 @@ parsecls(int *tyn) {
         }
 }
 
-static int
-parserefl(int arg) {
+static int parserefl(int arg) {
         int k, ty, env, hasenv, vararg;
         Ref r;
 
@@ -597,8 +588,7 @@ parserefl(int arg) {
         return vararg;
 }
 
-static Blk *
-findblk() {
+static Blk *findblk() {
         Blk *b;
         uint32_t h;
 
@@ -616,15 +606,13 @@ findblk() {
         return b;
 }
 
-static void
-closeblk() {
+static void closeblk() {
         idup(curb, insb, curi - insb);
         blink = &curb->link;
         curi  = insb;
 }
 
-static PState
-parseline(PState ps) {
+static PState parseline(PState ps) {
         Ref arg[NPred] = {R};
         Blk *blk[NPred];
         Phi *phi;
@@ -846,13 +834,11 @@ parseline(PState ps) {
         }
 }
 
-static int
-usecheck(Ref r, int k, Fn *fn) {
+static int usecheck(Ref r, int k, Fn *fn) {
         return rtype(r) != RTmp || fn->tmp[r.val].cls == k || (fn->tmp[r.val].cls == Kl && k == Kw);
 }
 
-static void
-typecheck(Fn *fn) {
+static void typecheck(Fn *fn) {
         Blk *b;
         Phi *p;
         Ins *i;
@@ -960,8 +946,7 @@ typecheck(Fn *fn) {
         }
 }
 
-static Fn *
-parsefn(Lnk *lnk) {
+static Fn *parsefn(Lnk *lnk) {
         Blk *b;
         int i;
         PState ps;
@@ -1026,8 +1011,7 @@ parsefn(Lnk *lnk) {
         return curf;
 }
 
-static void
-parsefields(Field *fld, Typ *ty, int t) {
+static void parsefields(Field *fld, Typ *ty, int t) {
         Typ *ty1;
         int n, c, a, al, type;
         uint64_t sz, s;
@@ -1121,8 +1105,7 @@ parsefields(Field *fld, Typ *ty, int t) {
         ty->align = al;
 }
 
-static void
-parsetyp() {
+static void parsetyp() {
         Typ *ty;
         int t, al;
         uint n;
@@ -1183,8 +1166,7 @@ parsetyp() {
         ty->nunion = n;
 }
 
-static void
-parsedatref(Dat *d) {
+static void parsedatref(Dat *d) {
         int t;
 
         d->isref      = 1;
@@ -1200,14 +1182,12 @@ parsedatref(Dat *d) {
         }
 }
 
-static void
-parsedatstr(Dat *d) {
+static void parsedatstr(Dat *d) {
         d->isstr = 1;
         d->u.str = strf(PFn, "%s", tokval.str);
 }
 
-static void
-parsedat(void cb(Dat *), Lnk *lnk) {
+static void parsedat(void cb(Dat *), Lnk *lnk) {
         char *name;
         int t;
         Dat d;
@@ -1281,8 +1261,7 @@ Done:
         cb(&d);
 }
 
-static int
-parselnk(Lnk *lnk) {
+static int parselnk(Lnk *lnk) {
         int t, haslnk;
 
         for (haslnk = 0;; haslnk = 1) {
@@ -1365,8 +1344,7 @@ void parse(FILE *f, char *path, void dbgfile(char *), void data(Dat *), void fun
         }
 }
 
-static void
-printcon(Con *c, FILE *f) {
+static void printcon(Con *c, FILE *f) {
         switch (c->type) {
         case CUndef:
                 break;
