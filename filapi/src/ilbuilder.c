@@ -166,3 +166,23 @@ Ref il_create_neg_w(ILBuilder *ilb, Ref a) { return mk1(ilb, Oneg, Kw, a); }
 Ref il_create_neg_l(ILBuilder *ilb, Ref a) { return mk1(ilb, Oneg, Kl, a); }
 Ref il_create_neg_s(ILBuilder *ilb, Ref a) { return mk1(ilb, Oneg, Ks, a); }
 Ref il_create_neg_d(ILBuilder *ilb, Ref a) { return mk1(ilb, Oneg, Kd, a); }
+
+/*----------------- BITWISE -----------------*/
+/* and & */
+Ref il_create_and_w(ILBuilder *bd, Ref a, Ref b) { return mk2(bd, Oand, Kw, a, b); }
+Ref il_create_and_l(ILBuilder *bd, Ref a, Ref b) { return mk2(bd, Oand, Kl, a, b); }
+/* or | */
+Ref il_create_or_w(ILBuilder *bd, Ref a, Ref b) { return mk2(bd, Oor, Kw, a, b); }
+Ref il_create_or_l(ILBuilder *bd, Ref a, Ref b) { return mk2(bd, Oor, Kl, a, b); }
+/* xor ^ */
+Ref il_create_xor_w(ILBuilder *bd, Ref a, Ref b) { return mk2(bd, Oxor, Kw, a, b); }
+Ref il_create_xor_l(ILBuilder *bd, Ref a, Ref b) { return mk2(bd, Oxor, Kl, a, b); }
+/* shift left << */
+Ref il_create_shl_w(ILBuilder *bd, Ref a, Ref b) { return mk2(bd, Oshl, Kw, a, b); } // b is w shift amount
+Ref il_create_shl_l(ILBuilder *bd, Ref a, Ref b) { return mk2(bd, Oshl, Kl, a, b); }
+/* shift right >> */
+Ref il_create_shr_w(ILBuilder *bd, Ref a, Ref b) { return mk2(bd, Oshr, Kw, a, b); }
+Ref il_create_shr_l(ILBuilder *bd, Ref a, Ref b) { return mk2(bd, Oshr, Kl, a, b); }
+/* shift right arithmatic */
+Ref il_create_sar_w(ILBuilder *bd, Ref a, Ref b) { return mk2(bd, Osar, Kw, a, b); }
+Ref il_create_sar_l(ILBuilder *bd, Ref a, Ref b) { return mk2(bd, Osar, Kl, a, b); }
