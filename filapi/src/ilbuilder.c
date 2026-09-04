@@ -114,3 +114,55 @@ Ref il_const_undef(ILBuilder *ilb) {
 Ref il_const_zero(ILBuilder *ilb) {
         return getcon(0, ilb->fn);
 }
+
+/*------------------ ARITHMETIC HELPERS -----------------*/
+// for binrary operations
+static Ref mk2(ILBuilder *ilb, int op, int cls, Ref a, Ref b) {
+        Ref r   = newtmp(0, cls, ilb->fn);
+        Ins ins = {.op = op, .cls = cls, .to = r, .arg = {a, b}};
+        addins(&ilb->cur->ins, &ilb->cur->nins, &ins);
+        return r;
+}
+// for unary operations
+static Ref mk1(ILBuilder *ilb, int op, int cls, Ref a) {
+        Ref r   = newtmp(0, cls, ilb->fn);
+        Ins ins = {.op = op, .cls = cls, .to = r, .arg = {a, R}};
+        addins(&ilb->cur->ins, &ilb->cur->nins, &ins);
+        return r;
+}
+
+/*----------------- ARITHMETIC -----------------*/
+/* add */
+Ref il_create_add_w(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Oadd, Kw, a, b); }
+Ref il_create_add_l(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Oadd, Kl, a, b); }
+Ref il_create_add_s(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Oadd, Ks, a, b); }
+Ref il_create_add_d(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Oadd, Kd, a, b); }
+/* sub */
+Ref il_create_sub_w(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Osub, Kw, a, b); }
+Ref il_create_sub_l(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Osub, Kl, a, b); }
+Ref il_create_sub_s(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Osub, Ks, a, b); }
+Ref il_create_sub_d(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Osub, Kd, a, b); }
+/* mul */
+Ref il_create_mul_w(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Omul, Kw, a, b); }
+Ref il_create_mul_l(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Omul, Kl, a, b); }
+Ref il_create_mul_s(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Omul, Ks, a, b); }
+Ref il_create_mul_d(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Omul, Kd, a, b); }
+/* div (signed) */
+Ref il_create_div_w(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Odiv, Kw, a, b); }
+Ref il_create_div_l(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Odiv, Kl, a, b); }
+Ref il_create_div_s(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Odiv, Ks, a, b); }
+Ref il_create_div_d(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Odiv, Kd, a, b); }
+/* udiv (unsigned) */
+Ref il_create_udiv_w(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Oudiv, Kw, a, b); }
+Ref il_create_udiv_l(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Oudiv, Kl, a, b); }
+/* remainder (signed) */
+Ref il_create_rem_w(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Orem, Kw, a, b); }
+Ref il_create_rem_l(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Orem, Kl, a, b); }
+/* remainder (unsigned) */
+Ref il_create_urem_w(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Ourem, Kw, a, b); }
+Ref il_create_urem_l(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Ourem, Kl, a, b); }
+/* unary negative */
+Ref il_create_neg_w(ILBuilder *ilb, Ref a) { return mk1(ilb, Oneg, Kw, a); }
+Ref il_create_neg_l(ILBuilder *ilb, Ref a) { return mk1(ilb, Oneg, Kl, a); }
+Ref il_create_neg_s(ILBuilder *ilb, Ref a) { return mk1(ilb, Oneg, Ks, a); }
+Ref il_create_neg_d(ILBuilder *ilb, Ref a) { return mk1(ilb, Oneg, Kd, a); }
