@@ -238,12 +238,30 @@ void il_create_blit(ILBuilder *ilb, Ref dst, Ref src, int64_t n) {
         addins(&ilb->cur->ins, &ilb->cur->nins, &i1);
 }
 
+/*----------------- CONTROL HELPER -----------------*/
+static void set_jmp(ILBuilder *ilb, int jmp_typ, Ref arg, Blk *s1, Blk *s2) {
+        Blk *b = ilb->cur;
+        if (!b) {
+                return;
+        }
+
+        b->jmp.type = jmp_typ;
+        b->jmp.arg  = arg;
+        b->s1       = s1;
+        b->s2       = s2;
+
+        // terminate current block
+        ilb->cur = NULL;
+}
+
 /*----------------- CONTROL -----------------*/
-void il_create_br(ILBuilder *ilb, Blk *dst) {}
-void il_create_cond_br(ILBuilder *ilb, Ref cond, Blk *then_blk, Blk *else_blk) {}
-void il_create_ret_w(ILBuilder *ilb, Ref v) {}
-void il_create_ret_l(ILBuilder *ilb, Ref v) {}
-void il_create_ret_s(ILBuilder *ilb, Ref v) {}
-void il_create_ret_d(ILBuilder *ilb, Ref v) {}
-void il_create_ret_void(ILBuilder *ilb) {}
-void il_create_unreachable(ILBuilder *ilb) {}
+/* branch */
+void il_create_br(ILBuilder *ilb, Blk *dst) { set_jmp(ilb, Jjmp, R, dst, NULL); }
+void il_create_cond_br(ILBuilder *ilb, Ref cond, Blk *then_blk, Blk *else_blk) { set_jmp(ilb, Jjnz, cond, then_blk, else_blk); }
+/* return */
+void il_create_ret_w(ILBuilder *ilb, Ref v) { set_jmp(ilb, Jretw, v, NULL, NULL); }
+void il_create_ret_l(ILBuilder *ilb, Ref v) { set_jmp(ilb, Jretl, v, NULL, NULL); }
+void il_create_ret_s(ILBuilder *ilb, Ref v) { set_jmp(ilb, Jrets, v, NULL, NULL); }
+void il_create_ret_d(ILBuilder *ilb, Ref v) { set_jmp(ilb, Jretd, v, NULL, NULL); }
+void il_create_ret_void(ILBuilder *ilb) { set_jmp(ilb, Jret0, R, NULL, NULL); }
+void il_create_unreachable(ILBuilder *ilb) { set_jmp(ilb, Jhlt, R, NULL, NULL); }

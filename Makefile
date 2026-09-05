@@ -17,11 +17,11 @@ BINDIR = $(PREFIX)/bin
 BUILDDIR = bin
 
 MAIN_OBJ = main.o
-UTIL_OBJ = util/util.o util/parse.o
-CORE_OBJ = core/cfg.o core/mem.o core/ssa.o core/alias.o core/load.o core/copy.o
-OPT_OBJ  = opt/fold.o opt/gvn.o opt/gcm.o opt/simpl.o opt/ifopt.o
-REG_OBJ  = reg/live.o reg/spill.o reg/rega.o
-EMIT_OBJ = emit/emit.o emit/abi.o
+UTIL_OBJ = src/util/util.o src/util/parse.o
+CORE_OBJ = src/core/cfg.o src/core/mem.o src/core/ssa.o src/core/alias.o src/core/load.o src/core/copy.o
+OPT_OBJ  = src/opt/fold.o src/opt/gvn.o src/opt/gcm.o src/opt/simpl.o src/opt/ifopt.o
+REG_OBJ  = src/reg/live.o src/reg/spill.o src/reg/rega.o
+EMIT_OBJ = src/emit/emit.o src/emit/abi.o
 COMMOBJ  = $(UTIL_OBJ) $(CORE_OBJ) $(OPT_OBJ) $(REG_OBJ) $(EMIT_OBJ)
 AMD64OBJ = amd64/targ.o amd64/sysv.o amd64/isel.o amd64/emit.o amd64/winabi.o
 ARM64OBJ = arm64/targ.o arm64/abi.o arm64/isel.o arm64/emit.o

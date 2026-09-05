@@ -11,11 +11,11 @@ cc="${CC:-cc}"
 # Updated object paths matching subdirectories in bin/
 objs=""
 for o in \
-  $objdir/util/util.o $objdir/util/parse.o \
-  $objdir/core/cfg.o $objdir/core/mem.o $objdir/core/ssa.o $objdir/core/alias.o $objdir/core/load.o $objdir/core/copy.o \
-  $objdir/opt/fold.o $objdir/opt/gvn.o $objdir/opt/gcm.o $objdir/opt/simpl.o $objdir/opt/ifopt.o \
-  $objdir/reg/live.o $objdir/reg/spill.o $objdir/reg/rega.o \
-  $objdir/emit/emit.o $objdir/emit/abi.o \
+  $objdir/src/util/util.o $objdir/src/util/parse.o \
+  $objdir/src/core/cfg.o $objdir/src/core/mem.o $objdir/src/core/ssa.o $objdir/src/core/alias.o $objdir/src/core/load.o $objdir/src/core/copy.o \
+  $objdir/src/opt/fold.o $objdir/src/opt/gvn.o $objdir/src/opt/gcm.o $objdir/src/opt/simpl.o $objdir/src/opt/ifopt.o \
+  $objdir/src/reg/live.o $objdir/src/reg/spill.o $objdir/src/reg/rega.o \
+  $objdir/src/emit/emit.o $objdir/src/emit/abi.o \
   $objdir/amd64/targ.o $objdir/amd64/sysv.o $objdir/amd64/isel.o $objdir/amd64/emit.o $objdir/amd64/winabi.o \
   $objdir/arm64/targ.o $objdir/arm64/abi.o $objdir/arm64/isel.o $objdir/arm64/emit.o \
   $objdir/rv64/targ.o $objdir/rv64/abi.o $objdir/rv64/isel.o $objdir/rv64/emit.o \
