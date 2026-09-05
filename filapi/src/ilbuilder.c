@@ -186,3 +186,54 @@ Ref il_create_shr_l(ILBuilder *bd, Ref a, Ref b) { return mk2(bd, Oshr, Kl, a, b
 /* shift right arithmatic */
 Ref il_create_sar_w(ILBuilder *bd, Ref a, Ref b) { return mk2(bd, Osar, Kw, a, b); }
 Ref il_create_sar_l(ILBuilder *bd, Ref a, Ref b) { return mk2(bd, Osar, Kl, a, b); }
+
+/*----------------- MEMORY HELPERS -----------------*/
+Ref allocator(ILBuilder *ilb, int op, int cls, Ref n) {
+        Ref r = newtmp(0, cls, ilb->fn);
+        Ins i = {.op = op, .cls = cls, .to = r, .arg = {n, R}}; // size = n, second arg R = none
+        addins(&ilb->cur->ins, &ilb->cur->nins, &i);
+        return r;
+}
+// load reads memory
+Ref load(ILBuilder *ilb, int op, int cls, Ref addr) {
+        Ref r = newtmp(0, cls, ilb->fn);
+        Ins i = {.op = op, .cls = cls, .to = r, .arg = {addr, R}};
+        addins(&ilb->cur->ins, &ilb->cur->nins, &i);
+        return r;
+}
+// store writes memory
+void store(ILBuilder *ilb, int op, int cls, Ref val, Ref addr) {
+        Ins i = {.op = op, .cls = cls, .to = R, .arg = {val, addr}};
+        addins(&ilb->cur->ins, &ilb->cur->nins, &i);
+}
+
+/*----------------- MEMORY -----------------*/
+/* alloc */
+Ref il_create_alloc4(ILBuilder *ilb, Ref n) { return allocator(ilb, Oalloc4, Kl, n); }
+Ref il_create_alloc8(ILBuilder *ilb, Ref n) { return allocator(ilb, Oalloc8, Kl, n); }
+Ref il_create_alloc16(ILBuilder *ilb, Ref n) { return allocator(ilb, Oalloc16, Kl, n); }
+/* load */
+Ref il_create_load_w(ILBuilder *ilb, Ref addr) { return load(ilb, Oloadsw, Kw, addr); }
+Ref il_create_load_l(ILBuilder *ilb, Ref addr) { return load(ilb, Oload, Kl, addr); }
+Ref il_create_load_s(ILBuilder *ilb, Ref addr) { return load(ilb, Oload, Ks, addr); }
+Ref il_create_load_d(ILBuilder *ilb, Ref addr) { return load(ilb, Oload, Kd, addr); }
+Ref il_create_load_sb(ILBuilder *ilb, Ref addr) { return load(ilb, Oloadsb, Kw, addr); }
+Ref il_create_load_ub(ILBuilder *ilb, Ref addr) { return load(ilb, Oloadub, Kw, addr); }
+Ref il_create_load_sh(ILBuilder *ilb, Ref addr) { return load(ilb, Oloadsh, Kw, addr); }
+Ref il_create_load_uh(ILBuilder *ilb, Ref addr) { return load(ilb, Oloaduh, Kw, addr); }
+Ref il_create_load_sw(ILBuilder *ilb, Ref addr) { return load(ilb, Oloadsw, Kl, addr); }
+Ref il_create_load_uw(ILBuilder *ilb, Ref addr) { return load(ilb, Oloaduw, Kl, addr); }
+/* store */
+void il_create_store_w(ILBuilder *ilb, Ref val, Ref addr) { store(ilb, Ostorew, Kw, val, addr); }
+void il_create_store_l(ILBuilder *ilb, Ref val, Ref addr) { store(ilb, Ostorel, Kl, val, addr); }
+void il_create_store_s(ILBuilder *ilb, Ref val, Ref addr) { store(ilb, Ostores, Ks, val, addr); }
+void il_create_store_d(ILBuilder *ilb, Ref val, Ref addr) { store(ilb, Ostored, Kd, val, addr); }
+void il_create_store_b(ILBuilder *ilb, Ref val, Ref addr) { store(ilb, Ostoreb, Kw, val, addr); }
+void il_create_store_h(ILBuilder *ilb, Ref val, Ref addr) { store(ilb, Ostoreh, Kw, val, addr); }
+/* copies n type from src to dst */
+void il_create_blit(ILBuilder *ilb, Ref dst, Ref src, int64_t n) {
+        Ins i0 = {.op = Oblit0, .cls = Kw, .to = R, .arg = {src, dst}};
+        addins(&ilb->cur->ins, &ilb->cur->nins, &i0);
+        Ins i1 = {.op = Oblit1, .cls = Kw, .to = R, .arg = {getcon(n, ilb->fn), R}};
+        addins(&ilb->cur->ins, &ilb->cur->nins, &i1);
+}

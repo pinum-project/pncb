@@ -84,7 +84,7 @@ uninstall:
 	rm -f "$(DESTDIR)$(BINDIR)/feather"
 
 clean:
-	rm -f $(BUILDDIR)/*.o $(BUILDDIR)/*/*.o $(BUILDDIR)/feather
+	rm -f $(BUILDDIR)/*.o $(BUILDDIR)/*/*.o $(BUILDDIR)/*/*/*.o $(BUILDDIR)/feather
 
 release:
 	$(MAKE) clean
