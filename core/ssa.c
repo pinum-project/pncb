@@ -8,7 +8,7 @@
  * Released under the MIT License.
  */
 
-#include "all.h"
+#include "../all.h"
 #include <stdarg.h>
 
 void adduse(Tmp *tmp, int ty, Blk *b, ...) {

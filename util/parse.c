@@ -10,7 +10,7 @@
 
 /* Lexer + parser */
 
-#include "all.h"
+#include "../all.h"
 #include <ctype.h>
 #include <stdarg.h>
 
@@ -36,7 +36,7 @@ Op optab[NOp] = {
         .cmpeqwl = ic, .cmplgtewl = lg, .eqval = cv, \
         .pinned = pn
 #define O(op, k, flags) [O##op] = {.name = #op, .argcls = k, flags},
-#include "ops.h"
+#include "../ops.h"
 #undef F
 };
 

@@ -237,3 +237,13 @@ void il_create_blit(ILBuilder *ilb, Ref dst, Ref src, int64_t n) {
         Ins i1 = {.op = Oblit1, .cls = Kw, .to = R, .arg = {getcon(n, ilb->fn), R}};
         addins(&ilb->cur->ins, &ilb->cur->nins, &i1);
 }
+
+/*----------------- CONTROL -----------------*/
+void il_create_br(ILBuilder *ilb, Blk *dst) {}
+void il_create_cond_br(ILBuilder *ilb, Ref cond, Blk *then_blk, Blk *else_blk) {}
+void il_create_ret_w(ILBuilder *ilb, Ref v) {}
+void il_create_ret_l(ILBuilder *ilb, Ref v) {}
+void il_create_ret_s(ILBuilder *ilb, Ref v) {}
+void il_create_ret_d(ILBuilder *ilb, Ref v) {}
+void il_create_ret_void(ILBuilder *ilb) {}
+void il_create_unreachable(ILBuilder *ilb) {}

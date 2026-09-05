@@ -16,23 +16,33 @@ BINDIR = $(PREFIX)/bin
 
 BUILDDIR = bin
 
-COMMOBJ  = main.o util.o parse.o abi.o cfg.o mem.o ssa.o alias.o load.o \
-           copy.o fold.o gvn.o gcm.o simpl.o ifopt.o live.o spill.o rega.o \
-           emit.o
-AMD64OBJ  = amd64/targ.o amd64/sysv.o amd64/isel.o amd64/emit.o amd64/winabi.o
-ARM64OBJ  = arm64/targ.o arm64/abi.o arm64/isel.o arm64/emit.o
-RV64OBJ   = rv64/targ.o rv64/abi.o rv64/isel.o rv64/emit.o
+MAIN_OBJ = main.o
+UTIL_OBJ = util/util.o util/parse.o
+CORE_OBJ = core/cfg.o core/mem.o core/ssa.o core/alias.o core/load.o core/copy.o
+OPT_OBJ  = opt/fold.o opt/gvn.o opt/gcm.o opt/simpl.o opt/ifopt.o
+REG_OBJ  = reg/live.o reg/spill.o reg/rega.o
+EMIT_OBJ = emit/emit.o emit/abi.o
+COMMOBJ  = $(UTIL_OBJ) $(CORE_OBJ) $(OPT_OBJ) $(REG_OBJ) $(EMIT_OBJ)
+AMD64OBJ = amd64/targ.o amd64/sysv.o amd64/isel.o amd64/emit.o amd64/winabi.o
+ARM64OBJ = arm64/targ.o arm64/abi.o arm64/isel.o arm64/emit.o
+RV64OBJ  = rv64/targ.o rv64/abi.o rv64/isel.o rv64/emit.o
 FILAPIOBJ = filapi/src/ilbuilder.o
-OBJ       = $(addprefix $(BUILDDIR)/,$(COMMOBJ) $(AMD64OBJ) $(ARM64OBJ) $(RV64OBJ) $(FILAPIOBJ))
 
-REL_CFLAGS = -std=c99 -O2 -Wall -Wextra -Wpedantic
+# Objects required for core library functionality (without main.o)
+CORE_LIB_OBJ = $(addprefix $(BUILDDIR)/,$(COMMOBJ) $(AMD64OBJ) $(ARM64OBJ) $(RV64OBJ) $(FILAPIOBJ))
 
-FILAPI_SRC = filapi/src/ilbuilder.c
+# Objects required for standalone binary
+OBJ          = $(BUILDDIR)/$(MAIN_OBJ) $(CORE_LIB_OBJ)
 
-SRCALL   = $(COMMOBJ:.o=.c) $(AMD64OBJ:.o=.c) $(ARM64OBJ:.o=.c) $(RV64OBJ:.o=.c) $(FILAPI_SRC)
+REL_CFLAGS   = -std=c99 -O2 -Wall -Wextra -Wpedantic
 
-CC       = cc
-CFLAGS   = -std=c99 -O2 -g -Wall -Wextra -Wpedantic
+FILAPI_SRC   = filapi/src/ilbuilder.c
+
+SRCALL       = $(UTIL_OBJ:.o=.c) $(CORE_OBJ:.o=.c) $(OPT_OBJ:.o=.c) $(REG_OBJ:.o=.c) $(EMIT_OBJ:.o=.c) \
+               $(AMD64OBJ:.o=.c) $(ARM64OBJ:.o=.c) $(RV64OBJ:.o=.c) $(FILAPI_SRC) main.c
+
+CC           = cc
+CFLAGS       = -std=c99 -O2 -g -Wall -Wextra -Wpedantic
 
 feather: bin/feather
 
@@ -47,7 +57,7 @@ $(addprefix $(BUILDDIR)/,$(COMMOBJ)): all.h ops.h
 $(addprefix $(BUILDDIR)/,$(AMD64OBJ)): amd64/all.h
 $(addprefix $(BUILDDIR)/,$(ARM64OBJ)): arm64/all.h
 $(addprefix $(BUILDDIR)/,$(RV64OBJ)): rv64/all.h
-$(BUILDDIR)/main.o: config.h
+$(BUILDDIR)/main.o: config.h main.c
 
 config.h:
 	@case `uname` in                               \
@@ -84,7 +94,7 @@ uninstall:
 	rm -f "$(DESTDIR)$(BINDIR)/feather"
 
 clean:
-	rm -f $(BUILDDIR)/*.o $(BUILDDIR)/*/*.o $(BUILDDIR)/*/*/*.o $(BUILDDIR)/feather
+	rm -rf $(BUILDDIR)/*
 
 release:
 	$(MAKE) clean
@@ -93,7 +103,7 @@ release:
 clean-gen: clean
 	rm -f config.h
 
-check-apitest: feather
+check-apitest: $(CORE_LIB_OBJ)
 	@tools/apitest.sh all
 
 check: feather
@@ -129,4 +139,4 @@ src:
 wc:
 	@wc -l $(SRCALL)
 
-.PHONY: clean clean-gen check check-arm64 check-rv64 check-amd64_win src 80 wc install uninstall release
+.PHONY: clean clean-gen check check-arm64 check-rv64 check-amd64_win check-apitest check-all src 80 wc install uninstall release

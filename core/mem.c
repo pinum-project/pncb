@@ -8,7 +8,7 @@
  * Released under the MIT License.
  */
 
-#include "all.h"
+#include "../all.h"
 
 typedef struct Range Range;
 typedef struct Store Store;

@@ -8,7 +8,7 @@
  * Released under the MIT License.
  */
 
-#include "all.h"
+#include "../all.h"
 
 /* eliminate sub-word abi op
  * variants for targets that

@@ -8,7 +8,7 @@
  * Released under the MIT License.
  */
 
-#include "all.h"
+#include "../all.h"
 
 #define MASK(w) (BIT(8 * (w) - 1) * 2 - 1) /* must work when w==8 */
 
