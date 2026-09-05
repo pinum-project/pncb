@@ -265,3 +265,54 @@ void il_create_ret_s(ILBuilder *ilb, Ref v) { set_jmp(ilb, Jrets, v, NULL, NULL)
 void il_create_ret_d(ILBuilder *ilb, Ref v) { set_jmp(ilb, Jretd, v, NULL, NULL); }
 void il_create_ret_void(ILBuilder *ilb) { set_jmp(ilb, Jret0, R, NULL, NULL); }
 void il_create_unreachable(ILBuilder *ilb) { set_jmp(ilb, Jhlt, R, NULL, NULL); }
+
+/*----------------- COMPARISON HELPERS -----------------*/
+Ref compare(ILBuilder *ilb, int op, int cls, Ref a, Ref b) {
+        Ref r = newtmp(0, cls, ilb->fn);
+        Ins i = {.op = op, .cls = cls, .to = r, .arg = {a, b}};
+        addins(&ilb->cur->ins, &ilb->cur->nins, &i);
+
+        return r;
+}
+
+/*----------------- COMPARISON -----------------*/
+/* 32 bit intagers */
+Ref il_create_icmp_eq_w(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Oceqw, Kw, a, b); }
+Ref il_create_icmp_ne_w(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocnew, Kw, a, b); }
+Ref il_create_icmp_sge_w(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocsgew, Kw, a, b); }
+Ref il_create_icmp_sgt_w(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocsgtw, Kw, a, b); }
+Ref il_create_icmp_sle_w(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocslew, Kw, a, b); }
+Ref il_create_icmp_slt_w(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocsltw, Kw, a, b); }
+Ref il_create_icmp_uge_w(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocugew, Kw, a, b); }
+Ref il_create_icmp_ugt_w(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocugtw, Kw, a, b); }
+Ref il_create_icmp_ule_w(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Oculew, Kw, a, b); }
+Ref il_create_icmp_ult_w(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocultw, Kw, a, b); }
+/* 64 bit intager */
+Ref il_create_icmp_eq_l(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Oceql, Kw, a, b); }
+Ref il_create_icmp_ne_l(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocnel, Kw, a, b); }
+Ref il_create_icmp_sge_l(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocsgel, Kw, a, b); }
+Ref il_create_icmp_sgt_l(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocsgtl, Kw, a, b); }
+Ref il_create_icmp_sle_l(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocslel, Kw, a, b); }
+Ref il_create_icmp_slt_l(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocsltl, Kw, a, b); }
+Ref il_create_icmp_uge_l(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocugel, Kw, a, b); }
+Ref il_create_icmp_ugt_l(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocugtl, Kw, a, b); }
+Ref il_create_icmp_ule_l(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Oculel, Kw, a, b); }
+Ref il_create_icmp_ult_l(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocultl, Kw, a, b); }
+/* Single-precision float comparisons */
+Ref il_create_fcmp_eq_s(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Oceqs, Kw, a, b); }
+Ref il_create_fcmp_ne_s(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocnes, Kw, a, b); }
+Ref il_create_fcmp_ge_s(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocges, Kw, a, b); }
+Ref il_create_fcmp_gt_s(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocgts, Kw, a, b); }
+Ref il_create_fcmp_le_s(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocles, Kw, a, b); }
+Ref il_create_fcmp_lt_s(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Oclts, Kw, a, b); }
+Ref il_create_fcmp_o_s(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocos, Kw, a, b); }
+Ref il_create_fcmp_uo_s(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocuos, Kw, a, b); }
+/* Double-precision float comparisons */
+Ref il_create_fcmp_eq_d(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Oceqd, Kw, a, b); }
+Ref il_create_fcmp_ne_d(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocned, Kw, a, b); }
+Ref il_create_fcmp_ge_d(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocged, Kw, a, b); }
+Ref il_create_fcmp_gt_d(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocgtd, Kw, a, b); }
+Ref il_create_fcmp_le_d(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocled, Kw, a, b); }
+Ref il_create_fcmp_lt_d(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocltd, Kw, a, b); }
+Ref il_create_fcmp_o_d(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocod, Kw, a, b); }
+Ref il_create_fcmp_uo_d(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocuod, Kw, a, b); }
