@@ -238,33 +238,48 @@ void il_create_blit(ILBuilder *ilb, Ref dst, Ref src, int64_t n) {
         addins(&ilb->cur->ins, &ilb->cur->nins, &i1);
 }
 
-/*----------------- CONTROL HELPER -----------------*/
-static void set_jmp(ILBuilder *ilb, int jmp_typ, Ref arg, Blk *s1, Blk *s2) {
-        Blk *b = ilb->cur;
-        if (!b) {
-                return;
-        }
-
-        b->jmp.type = jmp_typ;
-        b->jmp.arg  = arg;
-        b->s1       = s1;
-        b->s2       = s2;
-
-        // terminate current block
-        ilb->cur = NULL;
-}
-
-/*----------------- CONTROL -----------------*/
-/* branch */
-void il_create_br(ILBuilder *ilb, Blk *dst) { set_jmp(ilb, Jjmp, R, dst, NULL); }
-void il_create_cond_br(ILBuilder *ilb, Ref cond, Blk *then_blk, Blk *else_blk) { set_jmp(ilb, Jjnz, cond, then_blk, else_blk); }
-/* return */
-void il_create_ret_w(ILBuilder *ilb, Ref v) { set_jmp(ilb, Jretw, v, NULL, NULL); }
-void il_create_ret_l(ILBuilder *ilb, Ref v) { set_jmp(ilb, Jretl, v, NULL, NULL); }
-void il_create_ret_s(ILBuilder *ilb, Ref v) { set_jmp(ilb, Jrets, v, NULL, NULL); }
-void il_create_ret_d(ILBuilder *ilb, Ref v) { set_jmp(ilb, Jretd, v, NULL, NULL); }
-void il_create_ret_void(ILBuilder *ilb) { set_jmp(ilb, Jret0, R, NULL, NULL); }
-void il_create_unreachable(ILBuilder *ilb) { set_jmp(ilb, Jhlt, R, NULL, NULL); }
+/*----------------- CONVERSIONS / CASTS -----------------*/
+/* extend */
+Ref il_create_extsb_w(ILBuilder *ilb, Ref a) { return mk1(ilb, Oextsb, Kw, a); }
+Ref il_create_extsb_l(ILBuilder *ilb, Ref a) { return mk1(ilb, Oextsb, Kl, a); }
+Ref il_create_extub_w(ILBuilder *ilb, Ref a) { return mk1(ilb, Oextub, Kw, a); }
+Ref il_create_extub_l(ILBuilder *ilb, Ref a) { return mk1(ilb, Oextub, Kl, a); }
+Ref il_create_extsh_w(ILBuilder *ilb, Ref a) { return mk1(ilb, Oextsh, Kw, a); }
+Ref il_create_extsh_l(ILBuilder *ilb, Ref a) { return mk1(ilb, Oextsh, Kl, a); }
+Ref il_create_extuh_w(ILBuilder *ilb, Ref a) { return mk1(ilb, Oextuh, Kw, a); }
+Ref il_create_extuh_l(ILBuilder *ilb, Ref a) { return mk1(ilb, Oextuh, Kl, a); }
+Ref il_create_extsw_l(ILBuilder *ilb, Ref a) { return mk1(ilb, Oextsw, Kl, a); }
+Ref il_create_extuw_l(ILBuilder *ilb, Ref a) { return mk1(ilb, Oextuw, Kl, a); }
+Ref il_create_exts_d(ILBuilder *ilb, Ref a) { return mk1(ilb, Oexts, Kd, a); }
+Ref il_create_truncd_s(ILBuilder *ilb, Ref a) { return mk1(ilb, Otruncd, Ks, a); }
+/* 32/64 float -> 32/64 int*/
+Ref il_create_stosi_w(ILBuilder *ilb, Ref a) { return mk1(ilb, Ostosi, Kw, a); }
+Ref il_create_stosi_l(ILBuilder *ilb, Ref a) { return mk1(ilb, Ostosi, Kl, a); }
+Ref il_create_stoui_w(ILBuilder *ilb, Ref a) { return mk1(ilb, Ostoui, Kw, a); }
+Ref il_create_stoui_l(ILBuilder *ilb, Ref a) { return mk1(ilb, Ostoui, Kl, a); }
+Ref il_create_dtosi_w(ILBuilder *ilb, Ref a) { return mk1(ilb, Odtosi, Kw, a); }
+Ref il_create_dtosi_l(ILBuilder *ilb, Ref a) { return mk1(ilb, Odtosi, Kl, a); }
+Ref il_create_dtoui_w(ILBuilder *ilb, Ref a) { return mk1(ilb, Odtoui, Kw, a); }
+Ref il_create_dtoui_l(ILBuilder *ilb, Ref a) { return mk1(ilb, Odtoui, Kl, a); }
+/* 32/64 int -> 32/64 float*/
+Ref il_create_swtof_s(ILBuilder *ilb, Ref a) { return mk1(ilb, Oswtof, Ks, a); }
+Ref il_create_swtof_d(ILBuilder *ilb, Ref a) { return mk1(ilb, Oswtof, Kd, a); }
+Ref il_create_uwtof_s(ILBuilder *ilb, Ref a) { return mk1(ilb, Ouwtof, Ks, a); }
+Ref il_create_uwtof_d(ILBuilder *ilb, Ref a) { return mk1(ilb, Ouwtof, Kd, a); }
+Ref il_create_sltof_s(ILBuilder *ilb, Ref a) { return mk1(ilb, Osltof, Ks, a); }
+Ref il_create_sltof_d(ILBuilder *ilb, Ref a) { return mk1(ilb, Osltof, Kd, a); }
+Ref il_create_ultof_s(ILBuilder *ilb, Ref a) { return mk1(ilb, Oultof, Ks, a); }
+Ref il_create_ultof_d(ILBuilder *ilb, Ref a) { return mk1(ilb, Oultof, Kd, a); }
+/* bitcast */
+Ref il_create_cast_s(ILBuilder *ilb, Ref a) { return mk1(ilb, Ocast, Ks, a); }
+Ref il_create_cast_d(ILBuilder *ilb, Ref a) { return mk1(ilb, Ocast, Kd, a); }
+Ref il_create_cast_w(ILBuilder *ilb, Ref a) { return mk1(ilb, Ocast, Kw, a); }
+Ref il_create_cast_l(ILBuilder *ilb, Ref a) { return mk1(ilb, Ocast, Kl, a); }
+/* copy */
+Ref il_create_copy_w(ILBuilder *ilb, Ref a) { return mk1(ilb, Ocopy, Kw, a); }
+Ref il_create_copy_l(ILBuilder *ilb, Ref a) { return mk1(ilb, Ocopy, Kl, a); }
+Ref il_create_copy_s(ILBuilder *ilb, Ref a) { return mk1(ilb, Ocopy, Ks, a); }
+Ref il_create_copy_d(ILBuilder *ilb, Ref a) { return mk1(ilb, Ocopy, Kd, a); }
 
 /*----------------- COMPARISON HELPERS -----------------*/
 Ref compare(ILBuilder *ilb, int op, int cls, Ref a, Ref b) {
@@ -316,3 +331,31 @@ Ref il_create_fcmp_le_d(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocle
 Ref il_create_fcmp_lt_d(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocltd, Kw, a, b); }
 Ref il_create_fcmp_o_d(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocod, Kw, a, b); }
 Ref il_create_fcmp_uo_d(ILBuilder *ilb, Ref a, Ref b) { return compare(ilb, Ocuod, Kw, a, b); }
+
+/*----------------- CONTROL HELPER -----------------*/
+static void set_jmp(ILBuilder *ilb, int jmp_typ, Ref arg, Blk *s1, Blk *s2) {
+        Blk *b = ilb->cur;
+        if (!b) {
+                return;
+        }
+
+        b->jmp.type = jmp_typ;
+        b->jmp.arg  = arg;
+        b->s1       = s1;
+        b->s2       = s2;
+
+        // terminate current block
+        ilb->cur = NULL;
+}
+
+/*----------------- CONTROL -----------------*/
+/* branch */
+void il_create_br(ILBuilder *ilb, Blk *dst) { set_jmp(ilb, Jjmp, R, dst, NULL); }
+void il_create_cond_br(ILBuilder *ilb, Ref cond, Blk *then_blk, Blk *else_blk) { set_jmp(ilb, Jjnz, cond, then_blk, else_blk); }
+/* return */
+void il_create_ret_w(ILBuilder *ilb, Ref v) { set_jmp(ilb, Jretw, v, NULL, NULL); }
+void il_create_ret_l(ILBuilder *ilb, Ref v) { set_jmp(ilb, Jretl, v, NULL, NULL); }
+void il_create_ret_s(ILBuilder *ilb, Ref v) { set_jmp(ilb, Jrets, v, NULL, NULL); }
+void il_create_ret_d(ILBuilder *ilb, Ref v) { set_jmp(ilb, Jretd, v, NULL, NULL); }
+void il_create_ret_void(ILBuilder *ilb) { set_jmp(ilb, Jret0, R, NULL, NULL); }
+void il_create_unreachable(ILBuilder *ilb) { set_jmp(ilb, Jhlt, R, NULL, NULL); }
