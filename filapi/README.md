@@ -25,7 +25,7 @@
 
 ## Core Concepts
 
-- **Convenience Header**: Users can simply `#include "filapi/filapi.h"` to bring in both configuration and the ILBuilder API in one clean include.
+- **Convenience Header**: Users can simply `#include "filapi/filapi.h"` to bring in both configuration and the ILBuilder API in one include.
 - **`ILBuilder`**: A wrapper struct holding the current function (`Fn *fn`) and the current insertion basic block (`Blk *cur`), analogous to LLVM's `IRBuilder`.
 - **`Ref`**: Represents an operand in Feather IL—this can be a virtual register (temporary), a constant, or a global reference.
 - **`Blk`**: Represents a basic block containing a sequence of instructions terminated by a jump/return instruction (`jmp`).
