@@ -60,6 +60,7 @@ int main(void){
   il_create_neg_l(bd,cl1); if(!check_op(b,n++,Oneg,"neg_l")) return 1;
   il_create_neg_s(bd,cs1); if(!check_op(b,n++,Oneg,"neg_s")) return 1;
   il_create_neg_d(bd,cd1); if(!check_op(b,n++,Oneg,"neg_d")) return 1;
+  il_create_add(bd, Kw, cw1, cw2); if(!check_op(b,n++,Oadd,"il_create_add")) return 1;
 
   b->jmp.type = Jretw;
   b->jmp.arg = cw1;

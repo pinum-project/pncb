@@ -132,6 +132,8 @@ static Ref mk1(ILBuilder *ilb, int op, int cls, Ref a) {
 }
 
 /*----------------- ARITHMETIC -----------------*/
+/* generic add */
+Ref il_create_add(ILBuilder *ilb, int cls, Ref a, Ref b) { return mk2(ilb, Oadd, cls, a, b); }
 /* add */
 Ref il_create_add_w(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Oadd, Kw, a, b); }
 Ref il_create_add_l(ILBuilder *ilb, Ref a, Ref b) { return mk2(ilb, Oadd, Kl, a, b); }
@@ -223,6 +225,7 @@ Ref il_create_load_sh(ILBuilder *ilb, Ref addr) { return load(ilb, Oloadsh, Kw, 
 Ref il_create_load_uh(ILBuilder *ilb, Ref addr) { return load(ilb, Oloaduh, Kw, addr); }
 Ref il_create_load_sw(ILBuilder *ilb, Ref addr) { return load(ilb, Oloadsw, Kl, addr); }
 Ref il_create_load_uw(ILBuilder *ilb, Ref addr) { return load(ilb, Oloaduw, Kl, addr); }
+Ref il_create_load(ILBuilder *ilb, int cls, Ref addr) { return load(ilb, Oload, cls, addr); }
 /* store */
 void il_create_store_w(ILBuilder *ilb, Ref val, Ref addr) { store(ilb, Ostorew, Kw, val, addr); }
 void il_create_store_l(ILBuilder *ilb, Ref val, Ref addr) { store(ilb, Ostorel, Kl, val, addr); }
@@ -230,6 +233,17 @@ void il_create_store_s(ILBuilder *ilb, Ref val, Ref addr) { store(ilb, Ostores, 
 void il_create_store_d(ILBuilder *ilb, Ref val, Ref addr) { store(ilb, Ostored, Kd, val, addr); }
 void il_create_store_b(ILBuilder *ilb, Ref val, Ref addr) { store(ilb, Ostoreb, Kw, val, addr); }
 void il_create_store_h(ILBuilder *ilb, Ref val, Ref addr) { store(ilb, Ostoreh, Kw, val, addr); }
+void il_create_store(ILBuilder *ilb, int cls, Ref val, Ref addr) {
+        int op = Ostorew;
+        if (cls == Kl) {
+                op = Ostorel;
+        } else if (cls == Ks) {
+                op = Ostores;
+        } else if (cls == Kd) {
+                op = Ostored;
+        }
+        store(ilb, op, cls, val, addr);
+}
 /* copies n type from src to dst */
 void il_create_blit(ILBuilder *ilb, Ref dst, Ref src, int64_t n) {
         Ins i0 = {.op = Oblit0, .cls = Kw, .to = R, .arg = {src, dst}};
@@ -359,3 +373,60 @@ void il_create_ret_s(ILBuilder *ilb, Ref v) { set_jmp(ilb, Jrets, v, NULL, NULL)
 void il_create_ret_d(ILBuilder *ilb, Ref v) { set_jmp(ilb, Jretd, v, NULL, NULL); }
 void il_create_ret_void(ILBuilder *ilb) { set_jmp(ilb, Jret0, R, NULL, NULL); }
 void il_create_unreachable(ILBuilder *ilb) { set_jmp(ilb, Jhlt, R, NULL, NULL); }
+
+/*----------------- Phi / Call / Variadic HELPERS -----------------*/
+Ref createphi(ILBuilder *ilb, int cls, Blk *blks[], Ref vals[], int n) {
+        Ref r = newtmp(0, cls, ilb->fn);
+        Phi p = {.to = r, .cls = cls, .narg = n, .blk = malloc(n * sizeof(Blk *)), .arg = malloc(n * sizeof(Ref))};
+        for (int i = 0; i < n; i++) {
+                p.blk = &blks[i];
+                p.arg = &vals[i];
+        }
+
+        // Append to the block's phi chain
+        p.link        = ilb->cur->phi;
+        ilb->cur->phi = &p;
+        return r;
+}
+Ref createcall(ILBuilder *ilb, int cls, Ref fn, Ref args[], int nargs) {
+        Ref r = newtmp(0, cls, ilb->fn);
+
+        Ins i    = {0};
+        i.op     = Ocall;
+        i.cls    = cls;
+        i.to     = r;
+        i.arg[0] = fn;
+        if (nargs > 0) {
+                i.arg[1] = args[0];
+        }
+
+        addins(&ilb->cur->ins, &ilb->cur->nins, &i);
+        return r;
+}
+Ref createvaarg(ILBuilder *ilb, int cls, Ref ap) {
+        Ref r = newtmp(0, cls, ilb->fn);
+        Ins i = {.op = Ovaarg, .cls = cls, .to = r, .arg = {ap}};
+        addins(&ilb->cur->ins, &ilb->cur->nins, &i);
+        return r;
+}
+
+/*----------------- Phi / Call / Variadic -----------------*/
+/* phi */
+Ref il_create_phi_w(ILBuilder *ilb, Blk *blks[], Ref vals[], int n) { return createphi(ilb, Kw, blks, vals, n); }
+Ref il_create_phi_l(ILBuilder *ilb, Blk *blks[], Ref vals[], int n) { return createphi(ilb, Kl, blks, vals, n); }
+Ref il_create_phi_s(ILBuilder *ilb, Blk *blks[], Ref vals[], int n) { return createphi(ilb, Ks, blks, vals, n); }
+Ref il_create_phi_d(ILBuilder *ilb, Blk *blks[], Ref vals[], int n) { return createphi(ilb, Kd, blks, vals, n); }
+/* call */
+Ref il_create_call_w(ILBuilder *ilb, Ref fn, Ref args[], int nargs) { return createcall(ilb, Kw, fn, args, nargs); }
+Ref il_create_call_l(ILBuilder *ilb, Ref fn, Ref args[], int nargs) { return createcall(ilb, Kl, fn, args, nargs); }
+Ref il_create_call_s(ILBuilder *ilb, Ref fn, Ref args[], int nargs) { return createcall(ilb, Ks, fn, args, nargs); }
+Ref il_create_call_d(ILBuilder *ilb, Ref fn, Ref args[], int nargs) { return createcall(ilb, Kd, fn, args, nargs); }
+/* variadic */
+void il_create_vastart(ILBuilder *ilb, Ref ap) {
+        Ins i = {.op = Ovastart, .to = R, .arg = {ap}};
+        addins(&ilb->cur->ins, &ilb->cur->nins, &i);
+}
+Ref il_create_vaarg_w(ILBuilder *ilb, Ref ap) { return createvaarg(ilb, Kw, ap); }
+Ref il_create_vaarg_l(ILBuilder *ilb, Ref ap) { return createvaarg(ilb, Kl, ap); }
+Ref il_create_vaarg_s(ILBuilder *ilb, Ref ap) { return createvaarg(ilb, Ks, ap); }
+Ref il_create_vaarg_d(ILBuilder *ilb, Ref ap) { return createvaarg(ilb, Kd, ap); }

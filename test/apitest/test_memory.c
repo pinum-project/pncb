@@ -40,12 +40,14 @@ int main(void){
   il_create_store_d(bd,val_d,ptr4);
   il_create_store_b(bd,val_w,ptr4);
   il_create_store_h(bd,val_w,ptr4);
+  il_create_store(bd, Kw, val_w, ptr4);
 
   Ref loaded_w = il_create_load_w(bd, ptr4);
   Ref loaded_l = il_create_load_l(bd, ptr4);
   Ref loaded_s = il_create_load_s(bd, ptr4);
   Ref loaded_d = il_create_load_d(bd, ptr4);
-  (void)loaded_l; (void)loaded_s; (void)loaded_d;
+  Ref loaded_gen = il_create_load(bd, Kw, ptr4);
+  (void)loaded_l; (void)loaded_s; (void)loaded_d; (void)loaded_gen;
 
   (void)il_create_load_sb(bd,ptr4);
   (void)il_create_load_ub(bd,ptr4);
